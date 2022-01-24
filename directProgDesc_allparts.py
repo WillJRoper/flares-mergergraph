@@ -497,7 +497,7 @@ def mainDirectProgDesc(reg, snap, prog_snap, desc_snap,
 
     for num, simhaloID in enumerate(results.keys()):
 
-        grp, subgrp = simhaloID.split(".")
+        grp, subgrp = simhaloID
         sim_grp_haloids[num] = grp
         sim_subgrp_haloids[num] = subgrp
 
