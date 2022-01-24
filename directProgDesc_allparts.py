@@ -55,7 +55,7 @@ def dmgetLinks(current_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
         # Combine IDs to get the unique entries from both groups and subgroups
         halo_ids = [str(grp) + "." + str(subgrp).zfill(6)
                     for grp, subgrp in zip(pre_prog_grpids,
-                                           pre_prog_subgrpids)]
+                                           pre_prog_subgrpids) if grp != -2]
 
         # Find the unique halo IDs and the number of times each appears
         uniprog_ids, uniprog_counts = np.unique(halo_ids,
