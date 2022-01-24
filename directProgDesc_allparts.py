@@ -268,6 +268,7 @@ def get_data(ii, tag, inp='FLARES'):
                              dtype=np.int64)
         except ValueError:
             s_len = np.array([], dtype=np.int64)
+            s_gal_mass = np.array([], dtype=np.float64)
         g_len = hf[tag + '/Galaxy'].get('G_Length')
         g_gal_mass = hf[tag + '/Galaxy'].get('Mgas')
         dm_len = hf[tag + '/Galaxy'].get('DM_Length')
@@ -356,6 +357,7 @@ def partDirectProgDesc(reg, snap, prog_snap, desc_snap):
     multi_part_subgrpids = np.concatenate([subgrpid, subgrpid, subgrpid])
 
     # Combine the pointer arrays to reference the single large array
+    print(g_len, dm_len, s_len)
     lengths = np.concatenate([g_len, dm_len, s_len])
     begins = []
     begins.extend(gbegin)
