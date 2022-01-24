@@ -260,6 +260,10 @@ def get_progdesc_part_ind_dict(reg, snap):
         snap_grpIDs[pinds] = key[0]
         snap_subgrpIDs[pinds] = key[1]
 
+    if snap_grpIDs[snap_grpIDs == -2].size != snap_subgrpIDs[snap_subgrpIDs == -2].size:
+        print("WE HAVE A PROBLEM", snap_grpIDs[snap_grpIDs == -2].size,
+              snap_subgrpIDs[snap_subgrpIDs == -2].size)
+
     return snap_grpIDs, snap_subgrpIDs, part_types, part_masses, gal_masses
 
 
@@ -281,18 +285,18 @@ def get_data(ii, tag, inp='FLARES'):
             s_len = np.array(hf[tag + '/Galaxy'].get('S_Length'),
                              dtype=np.int64)
             s_gal_mass = np.array(hf[tag + '/Galaxy'].get('Mstar'),
-                                  dtype=np.int64)
+                                  dtype=np.int64) * 10 ** 10
         except ValueError:
             s_len = np.array([], dtype=np.int64)
             s_gal_mass = np.array([], dtype=np.float64)
         g_len = np.array(hf[tag + '/Galaxy'].get('G_Length'),
                          dtype=np.int64)
         g_gal_mass = np.array(hf[tag + '/Galaxy'].get('Mgas'),
-                              dtype=np.float64)
+                              dtype=np.float64) * 10 ** 10
         dm_len = np.array(hf[tag + '/Galaxy'].get('DM_Length'),
                           dtype=np.int64)
         dm_gal_mass = np.array(hf[tag + '/Galaxy'].get('Mdm'),
-                               dtype=np.float64)
+                               dtype=np.float64) * 10 ** 10
 
         grpid = np.array(hf[tag + '/Galaxy'].get('GroupNumber'),
                          dtype=np.int64)
@@ -332,7 +336,6 @@ def get_data(ii, tag, inp='FLARES'):
         g_gal_mass_dict = dict(zip(zip(grpid, subgrpid), g_gal_mass))
         dm_gal_mass_dict = dict(zip(zip(grpid, subgrpid), dm_gal_mass))
         s_gal_mass_dict = dict(zip(zip(grpid, subgrpid), s_gal_mass))
-        print(g_gal_mass_dict)
 
     return (s_len, g_len, dm_len, grpid, subgrpid, s_pid, g_pid, dm_pid,
             S_mass, G_mass, DM_mass,
