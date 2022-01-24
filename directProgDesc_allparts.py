@@ -269,10 +269,14 @@ def get_data(ii, tag, inp='FLARES'):
         except ValueError:
             s_len = np.array([], dtype=np.int64)
             s_gal_mass = np.array([], dtype=np.float64)
-        g_len = hf[tag + '/Galaxy'].get('G_Length')
-        g_gal_mass = hf[tag + '/Galaxy'].get('Mgas')
-        dm_len = hf[tag + '/Galaxy'].get('DM_Length')
-        dm_gal_mass = hf[tag + '/Galaxy'].get('Mdm')
+        g_len = np.array(hf[tag + '/Galaxy'].get('G_Length'),
+                         dtype=np.int64)
+        g_gal_mass = np.array(hf[tag + '/Galaxy'].get('Mgas'),
+                              dtype=np.float64)
+        dm_len = np.array(hf[tag + '/Galaxy'].get('DM_Length'),
+                          dtype=np.int64)
+        dm_gal_mass = np.array(hf[tag + '/Galaxy'].get('Mdm'),
+                               dtype=np.float64)
 
         grpid = np.array(hf[tag + '/Galaxy'].get('GroupNumber'),
                          dtype=np.int64)
