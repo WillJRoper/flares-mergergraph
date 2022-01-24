@@ -518,7 +518,7 @@ def mainDirectProgDesc(reg, snap, prog_snap, desc_snap,
             for pt in part_types:
                 prog_mass_conts[pt].extend(prog_mass_contribution[pt])
                 for pgrp, psubgrp in zip(prog_grpids, prog_subgrpids):
-                    prog_masses[pt].append(prog_gal_masses[(pgrp, psubgrp)])
+                    prog_masses[pt].append(prog_gal_masses[pt][(pgrp, psubgrp)])
         else:
             prog_start_index[haloID] = 2 ** 30
 
@@ -530,7 +530,7 @@ def mainDirectProgDesc(reg, snap, prog_snap, desc_snap,
             for pt in part_types:
                 desc_mass_conts[pt].extend(desc_mass_contribution[pt])
                 for dgrp, dsubgrp in zip(desc_grpids, desc_subgrpids):
-                    desc_masses[pt].append(desc_gal_masses[(dgrp, dsubgrp)])
+                    desc_masses[pt].append(desc_gal_masses[pt][(dgrp, dsubgrp)])
         else:
             desc_start_index[haloID] = 2 ** 30
 
