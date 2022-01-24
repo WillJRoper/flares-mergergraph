@@ -457,11 +457,11 @@ def write_hdf5(hdf, key, data):
     print(key, "written data of shape", data.shape, "and type", data.dtype)
 
 
-def mainDirectProgDesc(snap, prog_snap, desc_snap, path,
+def mainDirectProgDesc(reg, snap, prog_snap, desc_snap,
                        savepath='MergerGraphs/', part_types=(0, 1, 4)):
     
     # Get the graph links based on the dark matter
-    res = partDirectProgDesc(snap, prog_snap, desc_snap, path)
+    res = partDirectProgDesc(reg, snap, prog_snap, desc_snap)
     results, part_ids, part_inds, prog_gal_masses, desc_gal_masses = res
 
     # Set up arrays to store host results
@@ -602,7 +602,7 @@ if __name__ == '__main__':
 
         try:
             os.mkdir(
-                '/cosma/home/dp004/dc-rope1/FLARES/FLARES-1/MergerGraphs/FLARES_' + reg)
+                '/cosma7/data/dp004/FLARES/FLARES-1/MergerGraphs/FLARES_' + reg)
         except OSError:
             pass
 
@@ -613,9 +613,9 @@ if __name__ == '__main__':
     print(ind)
     print(reg_snaps[ind])
 
-    mainDirectProgDesc(snap=reg_snaps[ind][2], prog_snap=reg_snaps[ind][1],
+    mainDirectProgDesc(reg=reg_snaps[ind][0], snap=reg_snaps[ind][2],
+                       prog_snap=reg_snaps[ind][1],
                        desc_snap=reg_snaps[ind][3],
-                       path='/cosma/home/dp004/dc-rope1/FLARES/FLARES-1/G-EAGLE_' +
-                            reg_snaps[ind][0] + '/data',
-                       savepath='/cosma/home/dp004/dc-rope1/FLARES/FLARES-1/MergerGraphs/FLARES_'
+                       savepath='/cosma7/data/dp004/FLARES/FLARES-1/'
+                                'MergerGraphs/FLARES_'
                                 + reg_snaps[ind][0] + '/')
