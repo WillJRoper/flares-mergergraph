@@ -556,8 +556,8 @@ def mainDirectProgDesc(reg, snap, prog_snap, desc_snap,
     descs_grp = np.array(descs_grp)
     progs_subgrp = np.array(progs_subgrp)
     descs_subgrp = np.array(descs_subgrp)
-    prog_mass_conts = np.array(prog_mass_conts)
-    desc_mass_conts = np.array(desc_mass_conts)
+    prog_npart_conts = np.array(prog_npart_conts)
+    desc_npart_conts = np.array(desc_npart_conts)
     for pt in part_types:
         prog_mass_conts[pt] = np.array(prog_mass_conts[pt])
         desc_mass_conts[pt] = np.array(desc_mass_conts[pt])
@@ -579,8 +579,8 @@ def mainDirectProgDesc(reg, snap, prog_snap, desc_snap,
     write_hdf5(hdf, 'desc_group_ids', descs_grp)
     write_hdf5(hdf, 'prog_subgroup_ids', progs_subgrp)
     write_hdf5(hdf, 'desc_subgroup_ids', descs_subgrp)
-    write_hdf5(hdf, 'prog_npart_contribution', prog_mass_conts)
-    write_hdf5(hdf, 'desc_npart_contribution', desc_mass_conts)
+    write_hdf5(hdf, 'prog_npart_contribution', prog_npart_conts)
+    write_hdf5(hdf, 'desc_npart_contribution', desc_npart_conts)
 
     print("Progs", np.unique(nprogs[sim_grp_haloids >= 0], return_counts=True))
     print("Descs", np.unique(ndescs[sim_grp_haloids >= 0], return_counts=True))
