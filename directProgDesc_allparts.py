@@ -332,6 +332,7 @@ def get_data(ii, tag, inp='FLARES'):
         g_gal_mass_dict = dict(zip(zip(grpid, subgrpid), g_gal_mass))
         dm_gal_mass_dict = dict(zip(zip(grpid, subgrpid), dm_gal_mass))
         s_gal_mass_dict = dict(zip(zip(grpid, subgrpid), s_gal_mass))
+        print(g_gal_mass_dict)
 
     return (s_len, g_len, dm_len, grpid, subgrpid, s_pid, g_pid, dm_pid,
             S_mass, G_mass, DM_mass,
