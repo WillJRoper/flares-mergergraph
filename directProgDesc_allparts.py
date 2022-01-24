@@ -31,22 +31,24 @@ def dmgetLinks(current_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
                desc_snap_grpIDs, desc_snap_subgrpIDs, prog_snap_part_masses,
                desc_snap_part_masses, prog_snap_part_types,
                desc_snap_part_types):
-
     # Set up dictionaries for the mass contributions
     prog_mass_contribution = {}
     desc_mass_contribution = {}
 
     # =============== Find Progenitor IDs ===============
 
-    # If any progenitor halos exist (i.e. The current snapshot ID is not 000, enforced in the main function)
+    # If any progenitor halos exist (i.e. The current snapshot ID is not 000, 
+    # enforced in the main function)
     if prog_snap_grpIDs.size != 0:
 
         # Remove stars which have formed since the progenitor snapshot
         prog_current_pids = current_pids[current_pids < prog_snap_grpIDs.size]
 
-        # Find the halo IDs of the current halo's particles in the progenitor snapshot by indexing the
-        # progenitor snapshot's particle halo IDs array with the halo's particle IDs, this can be done
-        # since the particle halo IDs array is sorted by particle ID.
+        # Find the halo IDs of the current halo's particles in the 
+        # progenitor snapshot by indexing the progenitor snapshot's 
+        # particle halo IDs array with the halo's particle IDs, 
+        # this can be done since the particle halo IDs array is 
+        # sorted by particle ID.
         pre_prog_grpids = prog_snap_grpIDs[prog_current_pids]
         pre_prog_subgrpids = prog_snap_subgrpIDs[prog_current_pids]
         prog_part_types = prog_snap_part_types[prog_current_pids]
@@ -59,10 +61,10 @@ def dmgetLinks(current_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
 
         # Find the unique halo IDs and the number of times each appears
         uniprog_ids, uniprog_counts = np.unique(halo_ids,
-                                                       return_counts=True)
+                                                return_counts=True)
 
-        # Remove single particle halos (ID=-2), since np.unique returns a sorted array this can be
-        # done by removing the first value.
+        # Remove single particle halos (ID=-2), since np.unique returns 
+        # a sorted array this can be done by removing the first value.
         if uniprog_ids.size > 0:
             if uniprog_ids[0] == str(-2) + "." + str(-2).zfill(6):
                 uniprog_ids = uniprog_ids[1:]
@@ -75,8 +77,9 @@ def dmgetLinks(current_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
         # Find the number of progenitor halos from the size of the unique array
         nprog = uniprog_ids.size
 
-        # Sort the halo IDs and number of particles in each progenitor halo by their contribution to the
-        # current halo (number of particles from the current halo in the progenitor or descendant)
+        # Sort the halo IDs and number of particles in each progenitor 
+        # halo by their contribution to the current halo (number of 
+        # particles from the current halo in the progenitor or descendant)
         sorting_inds = uniprog_counts.argsort()[::-1]
         prog_ids = uniprog_ids[sorting_inds]
         prog_npart_contribution = uniprog_counts[sorting_inds]
@@ -88,10 +91,11 @@ def dmgetLinks(current_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
             prog_grpids[ind] = int(haloid.split(".")[0])
             prog_subgrpids[ind] = int(haloid.split(".")[-1])
 
-        for part_type in set(prog_part_types):
+        for part_type in [0, 1, 4]:
             for grp, subgrp in zip(prog_grpids, prog_subgrpids):
-                okinds = np.logical_and(pre_prog_grpids == grp, 
-                                        pre_prog_subgrpids == subgrp)
+                okinds = np.logical_and(np.logical_and(pre_prog_grpids == grp,
+                                                       pre_prog_subgrpids == subgrp),
+                                        prog_part_types == part_type)
                 if prog_part_masses[okinds].size > 0:
                     prog_mass_contribution.setdefault(part_type, []).append(
                         np.sum(prog_part_masses[okinds]))
@@ -104,15 +108,19 @@ def dmgetLinks(current_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
         prog_grpids = np.array([], copy=False, dtype=int)
         prog_subgrpids = np.array([], copy=False, dtype=int)
         prog_npart_contribution = np.array([], copy=False, dtype=int)
+        prog_mass_contribution = np.array([], copy=False, dtype=float)
 
     # =============== Find Descendant IDs ===============
 
-    # If any descendant halos exist (i.e. The current snapshot ID is not 000, enforced in the main function)
+    # If any descendant halos exist (i.e. The current snapshot ID is not 000, 
+    # enforced in the main function)
     if desc_snap_grpIDs.size != 0:
 
-        # Find the halo IDs of the current halo's particles in the descendant snapshot by indexing the
-        # descendant snapshot's particle halo IDs array with the halo's particle IDs, this can be done
-        # since the particle halo IDs array is sorted by particle ID.
+        # Find the halo IDs of the current halo's particles in the 
+        # descendant snapshot by indexing the descendant snapshot's 
+        # particle halo IDs array with the halo's particle IDs, 
+        # this can be done since the particle halo IDs array is 
+        # sorted by particle ID.
         pre_desc_grpids = desc_snap_grpIDs[current_pids]
         pre_desc_subgrpids = desc_snap_subgrpIDs[current_pids]
         desc_part_types = desc_snap_part_types[current_pids]
@@ -121,17 +129,18 @@ def dmgetLinks(current_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
         # Combine IDs to get the unique entries from both groups and subgroups
         halo_ids = [str(grp) + "." + str(subgrp).zfill(6)
                     for grp, subgrp in zip(pre_desc_grpids,
-                                           pre_desc_subgrpids)]
+                                           pre_desc_subgrpids) if grp != -2]
 
         # Find the unique halo IDs and the number of times each appears
         unidesc_ids, unidesc_counts = np.unique(halo_ids,
-                                                       return_counts=True)
+                                                return_counts=True)
 
-        # Remove single particle halos (ID=-2), since np.unique returns a sorted array this can be
-        # done by removing the first value.
-        if unidesc_ids[0] == str(-2) + "." + str(-2).zfill(6):
-            unidesc_ids = unidesc_ids[1:]
-            unidesc_counts = unidesc_counts[1:]
+        # Remove single particle halos (ID=-2), since np.unique returns 
+        # a sorted array this can be done by removing the first value.
+        if unidesc_ids.size > 0:
+            if unidesc_ids[0] == str(-2) + "." + str(-2).zfill(6):
+                unidesc_ids = unidesc_ids[1:]
+                unidesc_counts = unidesc_counts[1:]
 
         okinds = unidesc_counts >= 10
         unidesc_ids = unidesc_ids[okinds]
@@ -140,8 +149,9 @@ def dmgetLinks(current_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
         # Find the number of descendant halos from the size of the unique array
         ndesc = unidesc_ids.size
 
-        # Sort the halo IDs and number of particles in each descendant halo by their contribution to the
-        # current halo (number of particles from the current halo in the descendant or descendant)
+        # Sort the halo IDs and number of particles in each descendant 
+        # halo by their contribution to the current halo (number of 
+        # particles from the current halo in the descendant or descendant)
         sorting_inds = unidesc_counts.argsort()[::-1]
         desc_ids = unidesc_ids[sorting_inds]
         desc_npart_contribution = unidesc_counts[sorting_inds]
@@ -153,10 +163,11 @@ def dmgetLinks(current_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
             desc_grpids[ind] = int(haloid.split(".")[0])
             desc_subgrpids[ind] = int(haloid.split(".")[-1])
 
-        for part_type in set(desc_part_types):
+        for part_type in [0, 1, 4]:
             for grp, subgrp in zip(desc_grpids, desc_subgrpids):
-                okinds = np.logical_and(pre_desc_grpids == grp, 
-                                        pre_desc_subgrpids == subgrp)
+                okinds = np.logical_and(np.logical_and(pre_desc_grpids == grp,
+                                                       pre_desc_subgrpids == subgrp),
+                                        desc_part_types == part_type)
                 if desc_part_masses[okinds].size > 0:
                     desc_mass_contribution.setdefault(part_type, []).append(
                         np.sum(desc_part_masses[okinds]))
@@ -169,6 +180,7 @@ def dmgetLinks(current_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
         desc_grpids = np.array([], copy=False, dtype=int)
         desc_subgrpids = np.array([], copy=False, dtype=int)
         desc_npart_contribution = np.array([], copy=False, dtype=int)
+        desc_mass_contribution = np.array([], copy=False, dtype=float)
 
     return (nprog, prog_grpids, prog_subgrpids, prog_npart_contribution,
             prog_mass_contribution,
@@ -193,9 +205,9 @@ def get_progdesc_part_ind_dict(reg, snap):
     # Get the particle data for all particle types in the current snapshot
     (s_len, g_len, dm_len, grpid, subgrpid, s_pid, g_pid, dm_pid,
      S_mass, G_mass, DM_mass, sbegin, send,
-     gbegin, gend, dmbegin, dmend, g_gal_mass_dict, dm_gal_mass_dict, 
+     gbegin, gend, dmbegin, dmend, g_gal_mass_dict, dm_gal_mass_dict,
      s_gal_mass_dict) = get_data(reg, snap, inp='FLARES')
-    
+
     gal_masses = {}
     gal_masses[0] = g_gal_mass_dict
     gal_masses[1] = dm_gal_mass_dict
@@ -269,7 +281,7 @@ def get_data(ii, tag, inp='FLARES'):
             s_len = np.array(hf[tag + '/Galaxy'].get('S_Length'),
                              dtype=np.int64)
             s_gal_mass = np.array(hf[tag + '/Galaxy'].get('Mstar'),
-                             dtype=np.int64)
+                                  dtype=np.int64)
         except ValueError:
             s_len = np.array([], dtype=np.int64)
             s_gal_mass = np.array([], dtype=np.float64)
@@ -342,7 +354,7 @@ def partDirectProgDesc(reg, snap, prog_snap, desc_snap):
     # Get the particle data for all particle types in the current snapshot
     (s_len, g_len, dm_len, grpid, subgrpid, s_pid, g_pid, dm_pid,
      S_mass, G_mass, DM_mass, sbegin, send,
-     gbegin, gend, dmbegin, dmend, g_gal_mass_dict, dm_gal_mass_dict, 
+     gbegin, gend, dmbegin, dmend, g_gal_mass_dict, dm_gal_mass_dict,
      s_gal_mass_dict) = get_data(reg, snap, inp='FLARES')
 
     gas_part_types = np.full_like(g_pid, 0)
@@ -392,7 +404,7 @@ def partDirectProgDesc(reg, snap, prog_snap, desc_snap):
     if prog_snap != None:
 
         res = get_progdesc_part_ind_dict(reg, prog_snap)
-        (prog_snap_grpIDs, prog_snap_subgrpIDs, prog_part_types, 
+        (prog_snap_grpIDs, prog_snap_subgrpIDs, prog_part_types,
          prog_part_masses, prog_gal_masses) = res
 
     else:  # Assign an empty array if the snapshot is less than the earliest (000)
@@ -408,7 +420,7 @@ def partDirectProgDesc(reg, snap, prog_snap, desc_snap):
     if desc_snap != None:
 
         res = get_progdesc_part_ind_dict(reg, desc_snap)
-        (desc_snap_grpIDs, desc_snap_subgrpIDs, desc_part_types, 
+        (desc_snap_grpIDs, desc_snap_subgrpIDs, desc_part_types,
          desc_part_masses, desc_gal_masses) = res
 
     else:  # Assign an empty array if the snapshot is less than the earliest (000)
@@ -439,15 +451,15 @@ def partDirectProgDesc(reg, snap, prog_snap, desc_snap):
                                      prog_snap_grpIDs,
                                      prog_snap_subgrpIDs,
                                      desc_snap_grpIDs,
-                                     desc_snap_subgrpIDs, 
+                                     desc_snap_subgrpIDs,
                                      prog_part_masses,
-                                     desc_part_masses, 
+                                     desc_part_masses,
                                      prog_part_types,
                                      desc_part_types)
 
     print('Processed', len(results.keys()), 'halos in snapshot', snap)
 
-    return (results, part_ids, halo_id_part_inds, 
+    return (results, part_ids, halo_id_part_inds,
             prog_gal_masses, desc_gal_masses)
 
 
@@ -463,14 +475,13 @@ def get_int_sim_ids(simhaloID):
 
 
 def write_hdf5(hdf, key, data):
-    hdf.create_dataset(key, shape=data.shape,  dtype=data.dtype,
+    hdf.create_dataset(key, shape=data.shape, dtype=data.dtype,
                        data=data, compression='gzip')
     print(key, "written data of shape", data.shape, "and type", data.dtype)
 
 
 def mainDirectProgDesc(reg, snap, prog_snap, desc_snap,
                        savepath='MergerGraphs/', part_types=(0, 1, 4)):
-    
     # Get the graph links based on the dark matter
     res = partDirectProgDesc(reg, snap, prog_snap, desc_snap)
     results, part_ids, part_inds, prog_gal_masses, desc_gal_masses = res
@@ -518,7 +529,8 @@ def mainDirectProgDesc(reg, snap, prog_snap, desc_snap,
             for pt in part_types:
                 prog_mass_conts[pt].extend(prog_mass_contribution[pt])
                 for pgrp, psubgrp in zip(prog_grpids, prog_subgrpids):
-                    prog_masses[pt].append(prog_gal_masses[pt][(pgrp, psubgrp)])
+                    prog_masses[pt].append(
+                        prog_gal_masses[pt][(pgrp, psubgrp)])
         else:
             prog_start_index[haloID] = 2 ** 30
 
@@ -530,7 +542,8 @@ def mainDirectProgDesc(reg, snap, prog_snap, desc_snap,
             for pt in part_types:
                 desc_mass_conts[pt].extend(desc_mass_contribution[pt])
                 for dgrp, dsubgrp in zip(desc_grpids, desc_subgrpids):
-                    desc_masses[pt].append(desc_gal_masses[pt][(dgrp, dsubgrp)])
+                    desc_masses[pt].append(
+                        desc_gal_masses[pt][(dgrp, dsubgrp)])
         else:
             desc_start_index[haloID] = 2 ** 30
 
@@ -573,7 +586,6 @@ def mainDirectProgDesc(reg, snap, prog_snap, desc_snap,
     print("Descs", np.unique(ndescs[sim_grp_haloids >= 0], return_counts=True))
 
     for pt in part_types:
-
         write_hdf5(hdf, 'prog_parttype' + str(pt) + '_mass_contribution',
                    prog_mass_conts[pt])
         write_hdf5(hdf, 'desc_parttype' + str(pt) + '_mass_contribution',
