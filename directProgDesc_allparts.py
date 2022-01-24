@@ -27,7 +27,7 @@ def get_link_data(all_linked_halos, start_ind, nlinked_halos):
     return all_linked_halos[start_ind: start_ind + nlinked_halos]
 
 
-def dmgetLinks(current_halo_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
+def dmgetLinks(current_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
                desc_snap_grpIDs, desc_snap_subgrpIDs, prog_snap_part_masses,
                desc_snap_part_masses, prog_snap_part_types,
                desc_snap_part_types):
@@ -41,13 +41,16 @@ def dmgetLinks(current_halo_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
     # If any progenitor halos exist (i.e. The current snapshot ID is not 000, enforced in the main function)
     if prog_snap_grpIDs.size != 0:
 
+        # Remove stars which have formed since the progenitor snapshot
+        prog_current_pids = current_pids[current_pids < prog_snap_grpIDs.size]
+
         # Find the halo IDs of the current halo's particles in the progenitor snapshot by indexing the
         # progenitor snapshot's particle halo IDs array with the halo's particle IDs, this can be done
         # since the particle halo IDs array is sorted by particle ID.
-        pre_prog_grpids = prog_snap_grpIDs[current_halo_pids]
-        pre_prog_subgrpids = prog_snap_subgrpIDs[current_halo_pids]
-        prog_part_types = prog_snap_part_types[current_halo_pids]
-        prog_part_masses = prog_snap_part_masses[current_halo_pids]
+        pre_prog_grpids = prog_snap_grpIDs[prog_current_pids]
+        pre_prog_subgrpids = prog_snap_subgrpIDs[prog_current_pids]
+        prog_part_types = prog_snap_part_types[prog_current_pids]
+        prog_part_masses = prog_snap_part_masses[prog_current_pids]
 
         # Combine IDs to get the unique entries from both groups and subgroups
         halo_ids = [str(grp) + "." + str(subgrp).zfill(6)
@@ -109,10 +112,10 @@ def dmgetLinks(current_halo_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
         # Find the halo IDs of the current halo's particles in the descendant snapshot by indexing the
         # descendant snapshot's particle halo IDs array with the halo's particle IDs, this can be done
         # since the particle halo IDs array is sorted by particle ID.
-        pre_desc_grpids = desc_snap_grpIDs[current_halo_pids]
-        pre_desc_subgrpids = desc_snap_subgrpIDs[current_halo_pids]
-        desc_part_types = desc_snap_part_types[current_halo_pids]
-        desc_part_masses = desc_snap_part_masses[current_halo_pids]
+        pre_desc_grpids = desc_snap_grpIDs[current_pids]
+        pre_desc_subgrpids = desc_snap_subgrpIDs[current_pids]
+        desc_part_types = desc_snap_part_types[current_pids]
+        desc_part_masses = desc_snap_part_masses[current_pids]
 
         # Combine IDs to get the unique entries from both groups and subgroups
         halo_ids = [str(grp) + "." + str(subgrp).zfill(6)
@@ -170,7 +173,7 @@ def dmgetLinks(current_halo_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
             prog_mass_contribution,
             ndesc, desc_grpids, desc_subgrpids, desc_npart_contribution,
             desc_mass_contribution,
-            current_halo_pids)
+            current_pids)
 
 
 def get_current_part_ind_dict(begins, lengths, part_ids, sinds, grp_ids,
@@ -361,7 +364,6 @@ def partDirectProgDesc(reg, snap, prog_snap, desc_snap):
     multi_part_subgrpids = np.concatenate([subgrpid, subgrpid, subgrpid])
 
     # Combine the pointer arrays to reference the single large array
-    print(g_len, dm_len, s_len)
     lengths = np.concatenate([g_len, dm_len, s_len])
     begins = []
     begins.extend(gbegin)
@@ -374,6 +376,8 @@ def partDirectProgDesc(reg, snap, prog_snap, desc_snap):
 
     # Get the indices which sort the particle IDs
     sinds = np.argsort(part_ids)
+
+    print("Sorted", sinds.size, "Particles")
 
     # =============== Current Snapshot ===============
 
