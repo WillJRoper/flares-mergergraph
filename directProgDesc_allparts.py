@@ -63,9 +63,10 @@ def dmgetLinks(current_pids, prog_snap_grpIDs, prog_snap_subgrpIDs,
 
         # Remove single particle halos (ID=-2), since np.unique returns a sorted array this can be
         # done by removing the first value.
-        if uniprog_ids[0] == str(-2) + "." + str(-2).zfill(6):
-            uniprog_ids = uniprog_ids[1:]
-            uniprog_counts = uniprog_counts[1:]
+        if uniprog_ids.size > 0:
+            if uniprog_ids[0] == str(-2) + "." + str(-2).zfill(6):
+                uniprog_ids = uniprog_ids[1:]
+                uniprog_counts = uniprog_counts[1:]
 
         okinds = uniprog_counts >= 10
         uniprog_ids = uniprog_ids[okinds]
