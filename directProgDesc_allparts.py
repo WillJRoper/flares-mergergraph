@@ -204,31 +204,12 @@ def get_current_part_ind_dict(begins, lengths, part_ids, sinds, grp_ids,
 
 def get_progdesc_part_ind_dict(reg, snap):
 
-    gas_snap_part_ids = E.read_array('SNAP', '/cosma/home/dp004/dc-rope1/FLARES/'
-                                             'FLARES-1/G-EAGLE_' + str(reg) + '/data',
-                                     snap, 'PartType0/ParticleIDs',
-                                     numThreads=8)
-    dm_snap_part_ids = E.read_array('SNAP', '/cosma/home/dp004/dc-rope1/FLARES/'
-                                             'FLARES-1/G-EAGLE_' + str(reg) + '/data',
-                                     snap, 'PartType1/ParticleIDs',
-                                     numThreads=8)
-    s_snap_part_ids = E.read_array('SNAP', '/cosma/home/dp004/dc-rope1/FLARES/'
-                                             'FLARES-1/G-EAGLE_' + str(reg) + '/data',
-                                     snap, 'PartType4/ParticleIDs',
-                                     numThreads=8)
-
     # Get the particle data for all particle types in the current snapshot
     (s_len, g_len, dm_len, grpid, subgrpid, s_pid, g_pid, dm_pid,
      S_mass, G_mass, DM_mass, sbegin, send,
      gbegin, gend, dmbegin, dmend, g_gal_mass_dict, dm_gal_mass_dict,
-     s_gal_mass_dict) = get_data(reg, snap, inp='FLARES')
-
-    missing_g_pids = list(set(gas_snap_part_ids).difference(g_pid))
-    missing_dm_pids = list(set(dm_snap_part_ids).difference(dm_pid))
-    missing_s_pids = list(set(s_snap_part_ids).difference(s_pid))
-
-    print("Missing particles: Gas: %d DM: %d Star: %d" % (len(missing_g_pids),
-          len(missing_dm_pids), len(missing_s_pids)))
+     s_gal_mass_dict, missing_g_pids, missing_dm_pids,
+     missing_s_pids) = get_data(reg, snap, inp='FLARES')
 
     gal_masses = {}
     gal_masses[0] = g_gal_mass_dict
@@ -246,7 +227,7 @@ def get_progdesc_part_ind_dict(reg, snap):
 
     # Combine particle pids and types into a single array
     part_ids = np.concatenate([g_pid, dm_pid, s_pid,
-                               missing_g_pids, missing_dm_pids, 
+                               missing_g_pids, missing_dm_pids,
                                missing_s_pids])
     part_masses = np.concatenate([G_mass, DM_mass, S_mass])
     part_types = np.concatenate([gas_part_types, dm_part_types,
@@ -365,10 +346,31 @@ def get_data(ii, tag, inp='FLARES'):
         dm_gal_mass_dict = dict(zip(zip(grpid, subgrpid), dm_gal_mass))
         s_gal_mass_dict = dict(zip(zip(grpid, subgrpid), s_gal_mass))
 
+    gas_snap_part_ids = E.read_array('SNAP', '/cosma/home/dp004/dc-rope1/FLARES/'
+                                             'FLARES-1/G-EAGLE_' + str(reg) + '/data',
+                                     snap, 'PartType0/ParticleIDs',
+                                     numThreads=8)
+    dm_snap_part_ids = E.read_array('SNAP', '/cosma/home/dp004/dc-rope1/FLARES/'
+                                             'FLARES-1/G-EAGLE_' + str(reg) + '/data',
+                                     snap, 'PartType1/ParticleIDs',
+                                     numThreads=8)
+    s_snap_part_ids = E.read_array('SNAP', '/cosma/home/dp004/dc-rope1/FLARES/'
+                                             'FLARES-1/G-EAGLE_' + str(reg) + '/data',
+                                     snap, 'PartType4/ParticleIDs',
+                                     numThreads=8)
+
+    missing_g_pids = list(set(gas_snap_part_ids).difference(g_pid))
+    missing_dm_pids = list(set(dm_snap_part_ids).difference(dm_pid))
+    missing_s_pids = list(set(s_snap_part_ids).difference(s_pid))
+
+    print("Missing particles: Gas= %d DM= %d Star= %d" % (len(missing_g_pids),
+          len(missing_dm_pids), len(missing_s_pids)))
+
     return (s_len, g_len, dm_len, grpid, subgrpid, s_pid, g_pid, dm_pid,
             S_mass, G_mass, DM_mass,
             sbegin, send, gbegin, gend, dmbegin, dmend,
-            g_gal_mass_dict, dm_gal_mass_dict, s_gal_mass_dict)
+            g_gal_mass_dict, dm_gal_mass_dict, s_gal_mass_dict,
+            missing_g_pids, missing_dm_pids, missing_s_pids)
 
 
 def partDirectProgDesc(reg, snap, prog_snap, desc_snap):
@@ -387,7 +389,8 @@ def partDirectProgDesc(reg, snap, prog_snap, desc_snap):
     (s_len, g_len, dm_len, grpid, subgrpid, s_pid, g_pid, dm_pid,
      S_mass, G_mass, DM_mass, sbegin, send,
      gbegin, gend, dmbegin, dmend, g_gal_mass_dict, dm_gal_mass_dict,
-     s_gal_mass_dict) = get_data(reg, snap, inp='FLARES')
+     s_gal_mass_dict, missing_g_pids, missing_dm_pids,
+     missing_s_pids) = get_data(reg, snap, inp='FLARES')
 
     gas_part_types = np.full_like(g_pid, 0)
     dm_part_types = np.full_like(dm_pid, 1)
@@ -399,7 +402,9 @@ def partDirectProgDesc(reg, snap, prog_snap, desc_snap):
     #                              star_part_types, bh_part_types])
 
     # Combine particle pids and types into a single array
-    part_ids = np.concatenate([g_pid, dm_pid, s_pid])
+    part_ids = np.concatenate([g_pid, dm_pid, s_pid,
+                               missing_g_pids, missing_dm_pids,
+                               missing_s_pids])
     part_types = np.concatenate([gas_part_types, dm_part_types,
                                  star_part_types])
 
