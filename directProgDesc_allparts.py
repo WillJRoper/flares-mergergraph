@@ -5,6 +5,7 @@ import sys
 import h5py
 import matplotlib
 import numpy as np
+from eagle_IO import eagle_IO as E
 
 matplotlib.use('Agg')
 
@@ -202,6 +203,23 @@ def get_current_part_ind_dict(begins, lengths, part_ids, sinds, grp_ids,
 
 
 def get_progdesc_part_ind_dict(reg, snap):
+
+    gas_snap_part_ids = E.read_array('SNAP', '/cosma/home/dp004/dc-rope1/FLARES/'
+                                             'FLARES-1/G-EAGLE_' + str(reg) + '/data',
+                                     snap, 'PartType0/ParticleIDs',
+                                     numThreads=8)
+    print("Gas", snap, np.min(gas_snap_part_ids), np.max(gas_snap_part_ids))
+    dm_snap_part_ids = E.read_array('SNAP', '/cosma/home/dp004/dc-rope1/FLARES/'
+                                             'FLARES-1/G-EAGLE_' + str(reg) + '/data',
+                                     snap, 'PartType1/ParticleIDs',
+                                     numThreads=8)
+    print("DM", snap, np.min(dm_snap_part_ids), np.max(dm_snap_part_ids))
+    s_snap_part_ids = E.read_array('SNAP', '/cosma/home/dp004/dc-rope1/FLARES/'
+                                             'FLARES-1/G-EAGLE_' + str(reg) + '/data',
+                                     snap, 'PartType4/ParticleIDs',
+                                     numThreads=8)
+    print("Star", snap, np.min(s_snap_part_ids), np.max(s_snap_part_ids))
+
     # Get the particle data for all particle types in the current snapshot
     (s_len, g_len, dm_len, grpid, subgrpid, s_pid, g_pid, dm_pid,
      S_mass, G_mass, DM_mass, sbegin, send,
@@ -247,6 +265,14 @@ def get_progdesc_part_ind_dict(reg, snap):
     # Get the indices which sort the particle IDs
     sinds = np.argsort(part_ids)
 
+    # This is not the correct indices because of the omitted particles!
+    # We need to:
+    # - Find the missing particle IDs and include them.
+    # - Sort
+    # - Remove from the sorted IDs particles that are missing
+    # - Name this truncated array sinds which is compatible with begin
+    #   and length
+
     tup = get_current_part_ind_dict(begins, lengths, part_ids, sinds,
                                     multi_part_grpids, multi_part_subgrpids)
     subhalo_id_part_inds, halo_id_part_inds = tup
@@ -259,10 +285,6 @@ def get_progdesc_part_ind_dict(reg, snap):
             continue
         snap_grpIDs[pinds] = key[0]
         snap_subgrpIDs[pinds] = key[1]
-
-    if snap_grpIDs[snap_grpIDs == -2].size != snap_subgrpIDs[snap_subgrpIDs == -2].size:
-        print("WE HAVE A PROBLEM", snap_grpIDs[snap_grpIDs == -2].size,
-              snap_subgrpIDs[snap_subgrpIDs == -2].size)
 
     return snap_grpIDs, snap_subgrpIDs, part_types, part_masses, gal_masses
 
