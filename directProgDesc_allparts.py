@@ -227,7 +227,8 @@ def get_progdesc_part_ind_dict(reg, snap):
     missing_dm_pids = list(set(dm_snap_part_ids).difference(dm_pid))
     missing_s_pids = list(set(s_snap_part_ids).difference(s_pid))
 
-    print(len(missing_g_pids), len(missing_dm_pids), len(missing_s_pids))
+    print("Missing particles: Gas: %d DM: %d Star: %d" % (len(missing_g_pids),
+          len(missing_dm_pids), len(missing_s_pids)))
 
     gal_masses = {}
     gal_masses[0] = g_gal_mass_dict
@@ -244,7 +245,9 @@ def get_progdesc_part_ind_dict(reg, snap):
     #                              star_part_types, bh_part_types])
 
     # Combine particle pids and types into a single array
-    part_ids = np.concatenate([g_pid, dm_pid, s_pid])
+    part_ids = np.concatenate([g_pid, dm_pid, s_pid,
+                               missing_g_pids, missing_dm_pids, 
+                               missing_s_pids])
     part_masses = np.concatenate([G_mass, DM_mass, S_mass])
     part_types = np.concatenate([gas_part_types, dm_part_types,
                                  star_part_types])
