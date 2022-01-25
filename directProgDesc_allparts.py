@@ -219,12 +219,6 @@ def get_progdesc_part_ind_dict(reg, snap):
     gas_part_types = np.full_like(g_pid, 0)
     dm_part_types = np.full_like(dm_pid, 1)
     star_part_types = np.full_like(s_pid, 4)
-    missing_gas_part_types = np.full(len(missing_g_pids), 0, dtype=np.int16)
-    missing_dm_part_types = np.full(len(missing_dm_pids), 1, dtype=np.int16)
-    missing_star_part_types = np.full(len(missing_s_pids), 4, dtype=np.int16)
-    missing_gas_part_masses = np.full(len(missing_g_pids), 0, dtype=np.float32)
-    missing_dm_part_masses = np.full(len(missing_dm_pids), 0, dtype=np.float32)
-    missing_star_part_masses = np.full(len(missing_s_pids), 0, dtype=np.float32)
     # bh_part_types = np.full_like(bh_snap_part_ids, 5)
 
     # part_ids = np.concatenate([g_pid, dm_pid, s_pid, bh_pid])
@@ -235,11 +229,9 @@ def get_progdesc_part_ind_dict(reg, snap):
     part_ids = np.concatenate([g_pid, dm_pid, s_pid,
                                missing_g_pids, missing_dm_pids,
                                missing_s_pids])
-    part_types = np.concatenate([gas_part_types, dm_part_types,
-                                 star_part_types,
-                                 missing_gas_part_types,
-                                 missing_dm_part_types,
-                                 missing_star_part_types])
+    ini_part_types = np.concatenate([gas_part_types, dm_part_types,
+                                 star_part_types])
+    ini_part_masses = np.concatenate([G_mass, DM_mass, S_mass])
 
     # We need repeats of the group and subgroup arrays for the
     # single particle type arrays
@@ -260,14 +252,6 @@ def get_progdesc_part_ind_dict(reg, snap):
     # Get the indices which sort the particle IDs
     sinds = np.argsort(part_ids)
 
-    # This is not the correct indices because of the omitted particles!
-    # We need to:
-    # - Find the missing particle IDs and include them.
-    # - Sort
-    # - Remove from the sorted IDs particles that are missing
-    # - Name this truncated array sinds which is compatible with begin
-    #   and length
-
     tup = get_current_part_ind_dict(begins, lengths, part_ids, sinds,
                                     multi_part_grpids, multi_part_subgrpids)
     subhalo_id_part_inds, halo_id_part_inds = tup
@@ -280,6 +264,15 @@ def get_progdesc_part_ind_dict(reg, snap):
             continue
         snap_grpIDs[pinds] = key[0]
         snap_subgrpIDs[pinds] = key[1]
+
+    part_types = np.full(len(part_ids), -2, dtype=int)
+    part_masses = np.full(len(part_ids), -2, dtype=float)
+    for b, l in zip(begins, lengths):
+        pinds = sinds[b: b + l]
+        if len(pinds) < 20:
+            continue
+        part_types[pinds] = ini_part_types[b: b + l]
+        part_masses[pinds] = ini_part_masses[b: b + l]
 
     return snap_grpIDs, snap_subgrpIDs, part_types, part_masses, gal_masses
 
