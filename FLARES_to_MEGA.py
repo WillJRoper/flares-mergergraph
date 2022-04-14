@@ -114,7 +114,8 @@ def get_data(tictoc, reg, tag):
                                               []).extend(d["dm_masses"][key])
 
         # Loop over halos and clean any spurious (npart<10)
-        for key in halos["length"]:
+        ini_keys = list(halos["length"].keys())
+        for key in ini_keys:
 
             if halos["length"][key] < 10:
                 del halos["length"][key]
