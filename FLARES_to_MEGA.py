@@ -2,16 +2,18 @@ import sys
 
 import core.param_utils as p_utils
 import core.utilities as utils
-import h5py
-import mpi4py
-import numpy as np
 from core.collect_result import collect_halos
 from core.halo import Halo
 from core.serial_io import write_data
 from core.talking_utils import message
 from core.talking_utils import say_hello
 from core.timing import TicToc
+from core.timing import timer
+
 from mpi4py import MPI
+import h5py
+import mpi4py
+import numpy as np
 
 from eagle_IO import eagle_IO as E
 
@@ -24,25 +26,32 @@ rank = comm.rank  # rank of this process
 status = MPI.Status()  # get MPI status object
 
 
+@timer("Reading")
 def get_data(reg, tag):
     # Define sim path
     sim_path = "/cosma/home/dp004/dc-rope1/FLARES/FLARES-1/" \
                "G-EAGLE_" + reg + "/data/"
 
+    # Define the NULL value in GADGET files
+    null = 1073741824
+
     # Read in all the relevant data
-    part_ids = E.read_array("SNAP", sim_path, tag,
+    true_part_ids = E.read_array("SNAP", sim_path, tag,
+                            "PartType1/ParticleIDs", numThreads=8)
+    part_ids = E.read_array("PARTDATA", sim_path, tag,
                             "PartType1/ParticleIDs", numThreads=8)
     part_grp_ids = E.read_array("SNAP", sim_path, tag,
                                 "PartType1/GroupNumber", numThreads=8)
     part_subgrp_ids = E.read_array("PARTDATA", sim_path, tag,
                                    "PartType1/SubGroupNumber", numThreads=8)
-    part_pos = E.read_array("SNAP", sim_path, tag,
+    part_pos = E.read_array("PARTDATA", sim_path, tag,
                             "PartType1/Coordinates", numThreads=8)
-    part_vel = E.read_array("SNAP", sim_path, tag,
+    part_vel = E.read_array("PARTDATA", sim_path, tag,
                             "PartType1/Velocity", numThreads=8)
 
     # Get the number of particles we are dealing with
     npart = part_ids.size
+    true_npart = true_part_ids.size
 
     # Define master file path so we can simply get the DM part mass
     master_path = rF"/cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/" \
@@ -50,39 +59,103 @@ def get_data(reg, tag):
 
     # Get master file data and compute the DM particle mass
     with h5py.File(master_path, "r") as hf:
-        dm_len = np.array(hf[tag + "/Galaxy"].get("DM_Length"),
+        temp_dm_len = np.array(hf[tag + "/Galaxy"].get("DM_Length"),
                           dtype=np.int64)
         subgrp_dm_mass = np.array(hf[tag + "/Galaxy"].get("Mdm"),
                                   dtype=np.float64) * 10 ** 10
-        part_dm_mass = subgrp_dm_mass / dm_len
+        part_dm_mass = subgrp_dm_mass / temp_dm_len
 
     # Let's bin the particles and split the work up
     rank_bins = np.linspace(0, npart, size + 1, dtype=int)
 
     # Initialise dictionary to store sorted particles
-    halos = {"length": {}, "grpid": {}, "subgrpid": {}, "dm_pid": {},
+    halos = {"length": {}, "dm_pid": {},
              "dm_ind": {}, "dm_pos": {}, "dm_vel": {}, "dm_masses": {}}
-
-    # Define the NULL value in GADGET files
-    null = 2 ** 30
 
     # Loop over the particles on this rank
     for ind in range(rank_bins[rank], rank_bins[rank + 1]):
-        print(part_subgrp_ids[ind])
+
         # Is this particle in a subgroup?
         if part_subgrp_ids[ind] == null:
             continue
 
-    # Create pointer arrays
-    dmbegin = np.zeros(len(dm_len), dtype=np.int64)
-    dmbegin[1:] = np.cumsum(dm_len)[:-1]
-    dmend = np.cumsum(dm_len)
+        # Define this halo's key
+        key = (part_grp_ids[ind], part_subgrp_ids[ind])
 
-    dm_snap_part_ids = E.read_array("SNAP", sim_path, tag,
-                                    "PartType1/ParticleIDs", numThreads=8)
+        # Add this particle to the halo
+        halos["length"].setdefault(key, 0)
+        halos["length"][key] += 1
+        halos["dm_pid"].setdefault(key, []).append(part_ids)
+        halos["dm_ind"].setdefault(key, []).append(ind)
+        halos["dm_pos"].setdefault(key, []).append(part_pos[ind, :])
+        halos["dm_vel"].setdefault(key, []).append(part_vel[ind, :])
+        halos["dm_masses"].setdefault(key, []).append(part_dm_mass)
 
-    return (dm_len, grpid, subgrpid, dm_pid, dm_ind, dmbegin, dmend,
-            dm_pos, dm_vel, dm_masses, dm_snap_part_ids)
+    # Need collect on master
+    all_halos = comm.gather(halos, root=0)
+    if rank == 0:
+
+        # Loop over halos from other ranks
+        for r, d in enumerate(all_halos):
+            if r == 0:
+                continue
+
+            # Loop over halos
+            for key in d["length"]:
+
+                # Add this particle to the halo
+                halos["length"].setdefault(key, 0)
+                halos["length"][key] += d["length"][key]
+                halos["dm_pid"].setdefault(key, []).extend(d["dm_pid"][key])
+                halos["dm_ind"].setdefault(key, []).extend(d["dm_ind"][key])
+                halos["dm_pos"].setdefault(key, []).extend(d["dm_pos"][key])
+                halos["dm_vel"].setdefault(key, []).extend(d["dm_vel"][key])
+                halos["dm_masses"].setdefault(key,
+                                              []).extend(d["dm_masses"][key])
+
+        # Now we can sort our halos
+        keys, vals =  halos["length"].items()
+        keys = np.array(keys, dtype=object)
+        vals = np.array(vals, dtype=int)
+        sinds = np.argsort(vals)
+        keys = keys[sinds]
+        
+        # Define dictionary holding the sorted results
+        sorted_halos = {"dm_begin": np.array(len(keys), dtype=int), 
+                        "dm_len": np.array(len(keys), dtype=int), 
+                        "grpid": np.array(len(keys), dtype=int), 
+                        "subgrpid": np.array(len(keys), dtype=int), 
+                        "dm_pid": [], "dm_ind": [], "dm_pos": [], 
+                        "dm_vel": [], "dm_masses": []}
+        
+        # Loop over keys storing their results
+        for ihalo, key in enumerate(keys):
+            
+            # Get group and subgroup ID
+            grp, subgrp = key[0], key[1]
+            
+            # Store data
+            sorted_halos["dm_begin"][ihalo] = len(sorted_halos["dm_pid"])
+            sorted_halos["dm_len"][ihalo] = halos["length"][key]
+            sorted_halos["grpid"][ihalo] = grp
+            sorted_halos["subgrpid"][ihalo] = subgrp
+            sorted_halos["dm_pid"].extend(halos["dm_pid"][key])
+            sorted_halos["dm_ind"].extend(halos["dm_ind"][key])
+            sorted_halos["dm_pos"].extend(halos["dm_pos"][key])
+            sorted_halos["dm_vel"].extend(halos["dm_vel"][key])
+            sorted_halos["dm_masses"].extend(halos["dm_masses"][key])
+
+    else:
+        sorted_halos = None
+            
+    # Lets broadcast what we've combined
+    sorted_halos = comm.bcast(sorted_halos, root=0)
+
+    return (sorted_halos["dm_len"], sorted_halos["grpid"],
+            sorted_halos["subgrpid"], sorted_halos["dm_pid"],
+            sorted_halos["dm_ind"], sorted_halos["dm_begin"],
+            sorted_halos["dm_pos"], sorted_halos["dm_vel"],
+            sorted_halos["dm_masses"], part_ids, true_npart)
 
 
 def main(reg):
@@ -133,7 +206,7 @@ def main(reg):
     meta.tictoc = tictoc
 
     # Get the particle data for all particle types in the current snapshot
-    (dm_len, grpid, subgrpid, dm_pid, dm_ind, dmbegin, dmend, dm_pos, dm_vel,
+    (dm_len, grpid, subgrpid, dm_pid, dm_ind, dmbegin, dm_pos, dm_vel,
      dm_masses, dm_snap_part_ids) = get_data(reg, snap)
 
     # Set npart
@@ -153,15 +226,17 @@ def main(reg):
     # Split up galaxies across nodes
     if len(dmbegin) > meta.nranks:
         rank_halobins = np.linspace(0, len(dmbegin), size + 1, dtype=int)
-    else:
+    else:  # handle the case where there are less halos than ranks
         rank_halobins = []
-        for halo in range(len(dmbegin)):
-            rank_halobins.append()
+        for halo in range(len(dmbegin) + 1):
+            rank_halobins.append(halo)
+        while len(rank_halobins) < size + 1:
+            rank_halobins.append(0)
 
     # Loop over galaxies and create mega objects
     ihalo = rank_halobins[rank]
-    for b, l in zip(dmbegin[rank_halobins[rank]: rank_halobins[rank + 1]],
-                    dmend[rank_halobins[rank]: rank_halobins[rank + 1]]):
+    for b, w in zip(dmbegin[rank_halobins[rank]: rank_halobins[rank + 1]],
+                    dm_len[rank_halobins[rank]: rank_halobins[rank + 1]]):
         # Compute end
         e = b + l
 
