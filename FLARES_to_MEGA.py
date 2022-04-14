@@ -63,7 +63,10 @@ def get_data(tictoc, reg, tag):
                           dtype=np.int64)
         subgrp_dm_mass = np.array(hf[tag + "/Galaxy"].get("Mdm"),
                                   dtype=np.float64) * 10 ** 10
-        part_dm_mass = subgrp_dm_mass[0] / temp_dm_len[0]
+        try:
+            part_dm_mass = subgrp_dm_mass[0] / temp_dm_len[0]
+        except IndexError:
+            part_dm_mass = 0
 
     # Let's bin the particles and split the work up
     rank_bins = np.linspace(0, npart, size + 1, dtype=int)
