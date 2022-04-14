@@ -32,7 +32,7 @@ def get_data(tictoc, reg, tag, meta):
     # Define sim path
     sim_path = "/cosma/home/dp004/dc-rope1/FLARES/FLARES-1/" \
                "G-EAGLE_" + reg + "/data/"
-    single_file = sim_path + "snapshot_003_z012p000/snap_" + tag + ".0.hdf5"
+    single_file = sim_path + "snapshot_" + tag + "/snap_" + tag + ".0.hdf5"
 
     # Open single file and get DM particle mass
     hdf = h5py.File(single_file, "r")
