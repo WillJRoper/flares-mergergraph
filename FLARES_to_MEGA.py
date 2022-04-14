@@ -137,7 +137,7 @@ def main(reg):
 
     # Get the particle data for all particle types in the current snapshot
     (dm_len, grpid, subgrpid, dm_pid, dm_ind, dmbegin, dmend, dm_pos, dm_vel,
-     dm_masses, dm_snap_part_ids) = get_data(reg, snap, inp="FLARES")
+     dm_masses, dm_snap_part_ids) = get_data(reg, snap)
 
     # Set npart
     meta.npart[1] = dm_snap_part_ids.size
