@@ -122,10 +122,10 @@ def get_data(tictoc, reg, tag):
         keys = keys[sinds, :]
         
         # Define dictionary holding the sorted results
-        sorted_halos = {"dm_begin": np.array(keys.shape[0], dtype=int),
-                        "dm_len": np.array(keys.shape[0], dtype=int),
-                        "grpid": np.array(keys.shape[0], dtype=int),
-                        "subgrpid": np.array(keys.shape[0], dtype=int),
+        sorted_halos = {"dm_begin": np.zeros(keys.shape[0], dtype=int),
+                        "dm_len": np.zeros(keys.shape[0], dtype=int),
+                        "grpid": np.zeros(keys.shape[0], dtype=int),
+                        "subgrpid": np.zeros(keys.shape[0], dtype=int),
                         "dm_pid": [], "dm_ind": [], "dm_pos": [], 
                         "dm_vel": [], "dm_masses": []}
         
@@ -136,7 +136,6 @@ def get_data(tictoc, reg, tag):
             grp, subgrp = key[0], key[1]
             
             # Store data
-            print(len(sorted_halos["dm_pid"]), sorted_halos["dm_begin"].shape)
             sorted_halos["dm_begin"][ihalo] = len(sorted_halos["dm_pid"])
             sorted_halos["dm_len"][ihalo] = halos["length"][key]
             sorted_halos["grpid"][ihalo] = grp
