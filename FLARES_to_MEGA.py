@@ -94,7 +94,7 @@ def main(reg):
                             inputs["profilingPath"], cosmology["h"],
                             (simulation["comoving_DM_softening"],
                              simulation["max_physical_DM_softening"]),
-                            dmo=True, periodic=0, boxsize=30,
+                            dmo=True, periodic=0, boxsize=[3200, 3200, 3200],
                             npart=[0, 10**7, 0, 0, 0, 0], z=z, tot_mass=10**13)
 
     # Instantiate timer
