@@ -28,8 +28,8 @@ status = MPI.Status()  # get MPI status object
 def get_data(reg, tag):
 
     # Define sim path
-    sim_path = "/cosma/home/dp004/dc-rope1/FLARES/ FLARES-1/" \
-               "G-EAGLE_" + reg + "/data"
+    sim_path = "/cosma/home/dp004/dc-rope1/FLARES/FLARES-1/" \
+               "G-EAGLE_" + reg + "/data/"
 
     # Read in all the relevant data
     part_ids = E.read_array("SNAP", sim_path, tag,
