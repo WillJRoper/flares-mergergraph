@@ -27,11 +27,10 @@ status = MPI.Status()  # get MPI status object
 
 
 @timer("Reading")
-def get_data(tictoc, reg, tag, meta):
+def get_data(tictoc, reg, tag, meta, inputpath):
 
     # Define sim path
-    sim_path = "/cosma/home/dp004/dc-rope1/FLARES/FLARES-1/" \
-               "G-EAGLE_" + reg + "/data/"
+    sim_path = inputpath.replace("<reg>", reg)
     single_file = sim_path + "snapshot_" + tag + "/snap_" + tag + ".0.hdf5"
 
     # Open single file and get DM particle mass
@@ -242,7 +241,8 @@ def main():
     # Get the particle data for all particle types in the current snapshot
     (dm_len, grpid, subgrpid, dm_pid, dm_ind, dmbegin, dm_pos, dm_vel,
      dm_masses, dm_snap_part_ids, true_npart) = get_data(tictoc, reg,
-                                                        snap, meta)
+                                                         snap, meta,
+                                                         inputs["data"])
 
     # Set npart
     meta.npart[1] = dm_snap_part_ids.size
@@ -279,8 +279,9 @@ def main():
             continue
 
         # Store this halo
-        results[ihalo] = Halo(tictoc, dm_ind[b:e], None, dm_pid[b:e],
-                              dm_pos[b:e, :], dm_vel[b:e, :],
+        results[ihalo] = Halo(tictoc, dm_ind[b:e],
+                              (grpid[ihalo], subgrpid[ihalo]),
+                              dm_pid[b:e], dm_pos[b:e, :], dm_vel[b:e, :],
                               dm_part_types[b:e],
                               dm_masses[b:e], 10, meta)
         results[ihalo].memory = utils.get_size(results[ihalo])
@@ -301,10 +302,19 @@ def main():
         if meta.verbose:
             tictoc.report("Combining results")
 
+        # Create extra data arrays
+        extra_data = {"group_number": np.zeros(len(results), dtype=int),
+                      "subgroup_number": np.zeros(len(results), dtype=int)}
+        for ihalo in results:
+            grp, subgrp = results[ihalo].shifted_inds
+            extra_data["group_number"][ihalo] = grp
+            extra_data["subgroup_number"][ihalo] = subgrp
+
         # Write out file
         write_data(tictoc, meta, newPhaseID, newPhaseSubID,
                    results_dict=results_dict, sub_results_dict={},
-                   sim_pids=dm_snap_part_ids, basename_mod=reg)
+                   sim_pids=dm_snap_part_ids, basename_mod=reg,
+                   extra_data=extra_data)
 
         if meta.verbose:
             tictoc.report("Writing")
