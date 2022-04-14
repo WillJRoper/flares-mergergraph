@@ -136,7 +136,7 @@ def get_data(tictoc, reg, tag):
             grp, subgrp = key[0], key[1]
             
             # Store data
-            print(len(sorted_halos["dm_pid"]))
+            print(len(sorted_halos["dm_pid"]), sorted_halos["dm_begin"].shape)
             sorted_halos["dm_begin"][ihalo] = len(sorted_halos["dm_pid"])
             sorted_halos["dm_len"][ihalo] = halos["length"][key]
             sorted_halos["grpid"][ihalo] = grp
