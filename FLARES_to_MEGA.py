@@ -105,7 +105,7 @@ def main(reg):
     # Get the particle data for all particle types in the current snapshot
     (dm_len, grpid, subgrpid, dm_pid, dm_ind, dmbegin, dmend, dm_pos, dm_vel,
      dm_masses, dm_snap_part_ids) = get_data(reg, snap, inp="FLARES")
-    print(dm_masses)
+    print(dm_pos.shape, dm_vel.shape, dm_masses.shape)
     # Set npart
     meta.npart[1] = dm_snap_part_ids.size
 
@@ -125,7 +125,7 @@ def main(reg):
         
         # Compute end
         e = b + l
-        print(dm_masses[b:e], dm_pos[b:e, :])
+
         # Store this halo
         results[ihalo] = Halo(tictoc, dm_ind[b:e], None, dm_pid[b:e], 
                               dm_pos[b:e, :], dm_vel[b:e, :], dm_part_types[b:e],
