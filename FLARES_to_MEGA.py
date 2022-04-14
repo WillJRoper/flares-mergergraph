@@ -57,6 +57,9 @@ def get_data(tictoc, reg, tag):
     part_vel = E.read_array("PARTDATA", sim_path, tag,
                             "PartType1/Velocity", numThreads=8, noH=True, physicalUnits=True)
 
+    _ = E.read_array("PARTDATA", sim_path, tag,
+                            "PartType0/Mass", numThreads=8, noH=True, physicalUnits=True)
+
     # Get the number of particles we are dealing with
     npart = part_ids.size
     true_npart = true_part_ids.size
