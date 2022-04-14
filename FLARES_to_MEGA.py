@@ -113,6 +113,17 @@ def get_data(tictoc, reg, tag):
                 halos["dm_masses"].setdefault(key,
                                               []).extend(d["dm_masses"][key])
 
+        # Loop over halos and clean any spurious (npart<10)
+        for key in halos["length"]:
+
+            if halos["length"][key] < 10:
+                del halos["length"][key]
+                del halos["dm_pid"][key]
+                del halos["dm_ind"][key]
+                del halos["dm_pos"][key]
+                del halos["dm_vel"][key]
+                del halos["dm_masses"][key]
+
         # Now we can sort our halos
         keys = halos["length"].keys()
         vals = halos["length"].values()
@@ -266,13 +277,14 @@ def main():
         # Compute end
         e = b + l
 
+        if len(dm_ind[b:e]) < 10:
+            continue
+
         # Store this halo
         results[ihalo] = Halo(tictoc, dm_ind[b:e], None, dm_pid[b:e],
                               dm_pos[b:e, :], dm_vel[b:e, :],
                               dm_part_types[b:e],
                               dm_masses[b:e], 10, meta)
-        if results[ihalo].GE == 0:
-            print(results[ihalo].masses, results[ihalo].npart)
         results[ihalo].memory = utils.get_size(results[ihalo])
         ihalo += 1
 
