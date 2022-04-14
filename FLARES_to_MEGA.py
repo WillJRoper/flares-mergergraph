@@ -271,6 +271,8 @@ def main():
                               dm_pos[b:e, :], dm_vel[b:e, :],
                               dm_part_types[b:e],
                               dm_masses[b:e], 10, meta)
+        if results[ihalo].GE == 0:
+            print(results[ihalo].masses, results[ihalo].npart)
         results[ihalo].memory = utils.get_size(results[ihalo])
         ihalo += 1
 
