@@ -209,14 +209,14 @@ def main(reg):
 
     # Get the particle data for all particle types in the current snapshot
     (dm_len, grpid, subgrpid, dm_pid, dm_ind, dmbegin, dm_pos, dm_vel,
-     dm_masses, dm_snap_part_ids) = get_data(tictoc, reg, snap)
+     dm_masses, dm_snap_part_ids, true_npart) = get_data(tictoc, reg, snap)
 
     # Set npart
     meta.npart[1] = dm_snap_part_ids.size
 
     if rank == 0:
-        message(rank, "Npart: %d ~ %d^3" % (meta.npart[1],
-                                            int(meta.npart[1] ** (1 / 3))))
+        message(rank, "Npart: %d ~ %d^3" % (true_npart,
+                                            int(true_npart ** (1 / 3))))
         message(rank, "Nhalo: %d" % len(dmbegin))
 
     # Define part type array
@@ -237,7 +237,7 @@ def main(reg):
 
     # Loop over galaxies and create mega objects
     ihalo = rank_halobins[rank]
-    for b, w in zip(dmbegin[rank_halobins[rank]: rank_halobins[rank + 1]],
+    for b, l in zip(dmbegin[rank_halobins[rank]: rank_halobins[rank + 1]],
                     dm_len[rank_halobins[rank]: rank_halobins[rank + 1]]):
         # Compute end
         e = b + l
