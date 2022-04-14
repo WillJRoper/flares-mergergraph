@@ -396,12 +396,6 @@ def partDirectProgDesc(reg, snap, prog_snap, desc_snap):
     gas_part_types = np.full_like(g_pid, 0)
     dm_part_types = np.full_like(dm_pid, 1)
     star_part_types = np.full_like(s_pid, 4)
-    missing_gas_part_types = np.full(len(missing_g_pids), 0, dtype=np.int16)
-    missing_dm_part_types = np.full(len(missing_dm_pids), 1, dtype=np.int16)
-    missing_star_part_types = np.full(len(missing_s_pids), 4, dtype=np.int16)
-    missing_gas_part_masses = np.full(len(missing_g_pids), 0, dtype=np.float32)
-    missing_dm_part_masses = np.full(len(missing_dm_pids), 0, dtype=np.float32)
-    missing_star_part_masses = np.full(len(missing_s_pids), 0, dtype=np.float32)
     # bh_part_types = np.full_like(bh_snap_part_ids, 5)
 
     # part_ids = np.concatenate([g_pid, dm_pid, s_pid, bh_pid])
@@ -413,10 +407,7 @@ def partDirectProgDesc(reg, snap, prog_snap, desc_snap):
                                missing_g_pids, missing_dm_pids,
                                missing_s_pids])
     part_types = np.concatenate([gas_part_types, dm_part_types,
-                                 star_part_types,
-                                 missing_gas_part_types,
-                                 missing_dm_part_types,
-                                 missing_star_part_types])
+                                 star_part_types])
 
     # We need repeats of the group and subgroup arrays for the
     # single particle type arrays
