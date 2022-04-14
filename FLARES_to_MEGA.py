@@ -114,7 +114,8 @@ def get_data(tictoc, reg, tag):
                                               []).extend(d["dm_masses"][key])
 
         # Now we can sort our halos
-        keys, vals =  halos["length"].items()
+        keys = halos["length"].keys()
+        vals = halos["length"].values()
         keys = np.array(keys, dtype=object)
         vals = np.array(vals, dtype=int)
         sinds = np.argsort(vals)
