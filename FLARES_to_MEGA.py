@@ -40,7 +40,7 @@ def get_data(tictoc, reg, tag):
                             "PartType1/ParticleIDs", numThreads=8)
     part_ids = E.read_array("PARTDATA", sim_path, tag,
                             "PartType1/ParticleIDs", numThreads=8)
-    part_grp_ids = E.read_array("SNAP", sim_path, tag,
+    part_grp_ids = E.read_array("PARTDATA", sim_path, tag,
                                 "PartType1/GroupNumber", numThreads=8)
     part_subgrp_ids = E.read_array("PARTDATA", sim_path, tag,
                                    "PartType1/SubGroupNumber", numThreads=8)
@@ -119,15 +119,15 @@ def get_data(tictoc, reg, tag):
         keys = np.array(list(keys), dtype=object)
         vals = np.array(list(vals), dtype=int)
         sinds = np.argsort(vals)
-        keys = keys[sinds]
+        keys = keys[sinds, :]
 
-        print(keys, len(keys))
+        print(keys, keys.shape[0])
         
         # Define dictionary holding the sorted results
-        sorted_halos = {"dm_begin": np.array(len(keys), dtype=int), 
-                        "dm_len": np.array(len(keys), dtype=int), 
-                        "grpid": np.array(len(keys), dtype=int), 
-                        "subgrpid": np.array(len(keys), dtype=int), 
+        sorted_halos = {"dm_begin": np.array(keys.shape[0], dtype=int),
+                        "dm_len": np.array(keys.shape[0], dtype=int),
+                        "grpid": np.array(keys.shape[0], dtype=int),
+                        "subgrpid": np.array(keys.shape[0], dtype=int),
                         "dm_pid": [], "dm_ind": [], "dm_pos": [], 
                         "dm_vel": [], "dm_masses": []}
         
