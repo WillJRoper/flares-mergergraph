@@ -1,14 +1,27 @@
-import os
 import sys
 
 import h5py
 import numpy as np
 from eagle_IO import eagle_IO as E
+import mpi4py
+from mpi4py import MPI
 
 from core.halo import Halo
 from core.serial_io import write_data
 import core.param_utils as p_utils
 from core.timing import TicToc
+from core.collect_result import collect_halos
+from core.talking_utils import say_hello
+from core.talking_utils import message
+
+
+mpi4py.rc.recv_mprobe = False
+
+# Initializations and preliminaries
+comm = MPI.COMM_WORLD  # get MPI communicator object
+size = comm.size  # total number of processes
+rank = comm.rank  # rank of this process
+status = MPI.Status()  # get MPI status object
 
 
 def get_data(ii, tag, inp="FLARES"):
@@ -77,7 +90,8 @@ def main(reg):
     # Get snapshot
     snap = snaplist[snap_ind]
 
-    print("Running on Region %s and snap %s" % (reg, snap))
+    if rank == 0:
+        message(rank, "Running on Region %s and snap %s" % (reg, snap))
 
     # Get redshift
     z_str = snap.split('z')[1].split('p')
@@ -97,6 +111,9 @@ def main(reg):
                             dmo=True, periodic=0, boxsize=[3200, 3200, 3200],
                             npart=[0, 10**7, 0, 0, 0, 0], z=z, tot_mass=10**13)
 
+    if rank == 0:
+        say_hello(meta)
+
     # Instantiate timer
     tictoc = TicToc(meta)
     tictoc.start()
@@ -105,11 +122,13 @@ def main(reg):
     # Get the particle data for all particle types in the current snapshot
     (dm_len, grpid, subgrpid, dm_pid, dm_ind, dmbegin, dmend, dm_pos, dm_vel,
      dm_masses, dm_snap_part_ids) = get_data(reg, snap, inp="FLARES")
-    print(dm_pos.shape, dm_vel.shape, dm_masses.shape)
+
     # Set npart
     meta.npart[1] = dm_snap_part_ids.size
 
-    print("Npart: %d" % meta.npart[1])
+    if rank == 0:
+        message(rank, "Npart: %d" % meta.npart[1])
+        message(rank, "Nhalo: %d" % len(dmbegin))
 
     # Define part type array
     dm_part_types = np.full_like(dm_pid, 1)
@@ -117,11 +136,13 @@ def main(reg):
     # Initialise dictionary for mega halo objects
     results = {}
 
-    # Loop over galaxies and create mega objects
-    newPhaseID = 0
-    for (ihalo, b), l in zip(enumerate(dmbegin), dmend):
+    # Split up galaxies across nodes
+    rank_halobins = np.linspace(0, len(dmbegin), size + 1)
 
-        print(ihalo, end="\r")
+    # Loop over galaxies and create mega objects
+    ihalo = rank_halobins[rank]
+    for b, l in zip(dmbegin[rank_halobins[rank]: rank_halobins[rank + 1]],
+                    dmend[rank_halobins[rank]: rank_halobins[rank + 1]]):
         
         # Compute end
         e = b + l
@@ -130,12 +151,34 @@ def main(reg):
         results[ihalo] = Halo(tictoc, dm_ind[b:e], None, dm_pid[b:e], 
                               dm_pos[b:e, :], dm_vel[b:e, :], dm_part_types[b:e],
                               dm_masses[b:e], 10, meta)
-        newPhaseID = ihalo
+        ihalo += 1
 
-    # Write out file
-    write_data(tictoc, meta, newPhaseID, newPhaseSubID=0,
-               results_dict=results, sub_results_dict={},
-               pre_sort_part_haloids=None, sim_pids=dm_snap_part_ids)
+    # Collect child process results
+    tictoc.start_func_time("Collecting")
+    collected_results = comm.gather(results, root=0)
+    tictoc.stop_func_time()
+
+    if rank == 0:
+
+        # Lets collect all the halos we have collected from the other ranks
+        res_tup = collect_halos(tictoc, meta, collected_results,
+                                [{}, ] * size)
+        (newPhaseID, newPhaseSubID, results_dict, haloID_dict,
+         sub_results_dict, subhaloID_dict, phase_part_haloids) = res_tup
+
+        if meta.verbose:
+            tictoc.report("Combining results")
+
+        # Write out file
+        write_data(tictoc, meta, ihalo, newPhaseSubID=0,
+                   results_dict=results_dict, sub_results_dict={},
+                   pre_sort_part_haloids=None, sim_pids=dm_snap_part_ids)
+
+        if meta.verbose:
+            tictoc.report("Writing")
+
+    tictoc.end()
+    tictoc.end_report(comm)
         
 
 regions = []
