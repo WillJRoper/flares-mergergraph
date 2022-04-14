@@ -220,6 +220,7 @@ def main(reg):
         message(rank, "Nhalo: %d" % len(dmbegin))
 
     # Define part type array
+    print(dm_pid.shape)
     dm_part_types = np.full_like(dm_pid, 1)
 
     # Initialise dictionary for mega halo objects
