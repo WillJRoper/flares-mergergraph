@@ -77,6 +77,8 @@ def main(reg):
     # Get snapshot
     snap = snaplist[snap_ind]
 
+    print("Running on Region %s and snap %s" % (reg, snap))
+
     # Get redshift
     z_str = snap.split('z')[1].split('p')
     z = float(z_str[0] + '.' + z_str[1])
@@ -107,6 +109,8 @@ def main(reg):
     # Set npart
     meta.npart[1] = dm_snap_part_ids.size
 
+    print("Npart: %d" % meta.npart[1])
+
     # Define part type array
     dm_part_types = np.full_like(dm_pid, 1)
 
@@ -116,6 +120,8 @@ def main(reg):
     # Loop over galaxies and create mega objects
     newPhaseID = 0
     for (ihalo, b), l in zip(enumerate(dmbegin), dmend):
+
+        print(ihalo, end="\r")
         
         # Compute end
         e = b + l
