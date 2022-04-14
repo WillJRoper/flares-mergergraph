@@ -1,20 +1,19 @@
 import sys
 
+import core.param_utils as p_utils
+import core.utilities as utils
 import h5py
-import numpy as np
-from eagle_IO import eagle_IO as E
 import mpi4py
-from mpi4py import MPI
-
+import numpy as np
+from core.collect_result import collect_halos
 from core.halo import Halo
 from core.serial_io import write_data
-import core.param_utils as p_utils
-from core.timing import TicToc
-from core.collect_result import collect_halos
-from core.talking_utils import say_hello
 from core.talking_utils import message
-import core.utilities as utils
+from core.talking_utils import say_hello
+from core.timing import TicToc
+from mpi4py import MPI
 
+from eagle_IO import eagle_IO as E
 
 mpi4py.rc.recv_mprobe = False
 
@@ -26,7 +25,6 @@ status = MPI.Status()  # get MPI status object
 
 
 def get_data(reg, tag):
-
     # Define sim path
     sim_path = "/cosma/home/dp004/dc-rope1/FLARES/FLARES-1/" \
                "G-EAGLE_" + reg + "/data/"
@@ -36,12 +34,12 @@ def get_data(reg, tag):
                             "PartType1/ParticleIDs", numThreads=8)
     part_grp_ids = E.read_array("SNAP", sim_path, tag,
                                 "PartType1/GroupNumber", numThreads=8)
-    part_subgrp_ids = E.read_array("SNAP", sim_path, tag,
-                                "PartType1/SubGroupNumber", numThreads=8)
+    part_subgrp_ids = E.read_array("PARTDATA", sim_path, tag,
+                                   "PartType1/SubGroupNumber", numThreads=8)
     part_pos = E.read_array("SNAP", sim_path, tag,
-                                "PartType1/Coordinates", numThreads=8)
+                            "PartType1/Coordinates", numThreads=8)
     part_vel = E.read_array("SNAP", sim_path, tag,
-                                "PartType1/Velocity", numThreads=8)
+                            "PartType1/Velocity", numThreads=8)
 
     # Get the number of particles we are dealing with
     npart = part_ids.size
@@ -66,7 +64,7 @@ def get_data(reg, tag):
              "dm_ind": {}, "dm_pos": {}, "dm_vel": {}, "dm_masses": {}}
 
     # Define the NULL value in GADGET files
-    null = 2**30
+    null = 2 ** 30
 
     # Loop over the particles on this rank
     for ind in range(rank_bins[rank], rank_bins[rank + 1]):
@@ -75,12 +73,11 @@ def get_data(reg, tag):
         if part_subgrp_ids[ind] == null:
             continue
 
-
     # Create pointer arrays
     dmbegin = np.zeros(len(dm_len), dtype=np.int64)
     dmbegin[1:] = np.cumsum(dm_len)[:-1]
     dmend = np.cumsum(dm_len)
-    
+
     dm_snap_part_ids = E.read_array("SNAP", sim_path, tag,
                                     "PartType1/ParticleIDs", numThreads=8)
 
@@ -89,7 +86,6 @@ def get_data(reg, tag):
 
 
 def main(reg):
-
     # Read the parameter file
     paramfile = sys.argv[1]
     (inputs, flags, params, cosmology,
@@ -121,7 +117,8 @@ def main(reg):
                             (simulation["comoving_DM_softening"],
                              simulation["max_physical_DM_softening"]),
                             dmo=True, periodic=0, boxsize=[3200, 3200, 3200],
-                            npart=[0, 10**7, 0, 0, 0, 0], z=z, tot_mass=10**13)
+                            npart=[0, 10 ** 7, 0, 0, 0, 0], z=z,
+                            tot_mass=10 ** 13)
 
     meta.rank = rank
     meta.nranks = size
@@ -144,7 +141,7 @@ def main(reg):
 
     if rank == 0:
         message(rank, "Npart: %d ~ %d^3" % (meta.npart[1],
-                                        int(meta.npart[1] ** (1/3))))
+                                            int(meta.npart[1] ** (1 / 3))))
         message(rank, "Nhalo: %d" % len(dmbegin))
 
     # Define part type array
@@ -165,13 +162,13 @@ def main(reg):
     ihalo = rank_halobins[rank]
     for b, l in zip(dmbegin[rank_halobins[rank]: rank_halobins[rank + 1]],
                     dmend[rank_halobins[rank]: rank_halobins[rank + 1]]):
-        
         # Compute end
         e = b + l
 
         # Store this halo
-        results[ihalo] = Halo(tictoc, dm_ind[b:e], None, dm_pid[b:e], 
-                              dm_pos[b:e, :], dm_vel[b:e, :], dm_part_types[b:e],
+        results[ihalo] = Halo(tictoc, dm_ind[b:e], None, dm_pid[b:e],
+                              dm_pos[b:e, :], dm_vel[b:e, :],
+                              dm_part_types[b:e],
                               dm_masses[b:e], 10, meta)
         results[ihalo].memory = utils.get_size(results[ihalo])
         ihalo += 1
@@ -202,7 +199,7 @@ def main(reg):
 
     tictoc.end()
     tictoc.end_report(comm)
-        
+
 
 regions = []
 for reg in range(0, 40):
@@ -210,7 +207,6 @@ for reg in range(0, 40):
         regions.append("0" + str(reg))
     else:
         regions.append(str(reg))
-
 
 if __name__ == "__main__":
     main(regions[int(sys.argv[2])])
