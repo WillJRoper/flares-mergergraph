@@ -183,7 +183,8 @@ def main():
     (inputs, flags, params, cosmology,
      simulation) = p_utils.read_param(paramfile)
 
-    snap_ind = int(sys.argv[2])
+    job_ind = int(sys.argv[2])
+    snap_ind = job_ind % len(regions)
 
     # Load the snapshot list
     snaplist = ["000_z015p000", "001_z014p000", "002_z013p000", "003_z012p000",
@@ -197,7 +198,8 @@ def main():
             reg_snaps.append((reg, snap))
 
     # Get snapshot and region
-    reg, snap = reg_snaps[snap_ind]
+    reg, snap = reg_snaps[job_ind]
+    message(rank, "Job:%d Reg:%s Snap:%s" % (job_ind, reg, snap))
 
     # Get redshift
     z_str = snap.split('z')[1].split('p')
