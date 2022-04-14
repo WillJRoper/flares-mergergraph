@@ -28,9 +28,16 @@ status = MPI.Status()  # get MPI status object
 
 @timer("Reading")
 def get_data(tictoc, reg, tag):
+
     # Define sim path
     sim_path = "/cosma/home/dp004/dc-rope1/FLARES/FLARES-1/" \
                "G-EAGLE_" + reg + "/data/"
+    single_file = sim_path + "snapshot_003_z012p000/snap_" + tag + ".0.hdf5"
+
+    # Open single file and get DM particle mass
+    hdf = h5py.File(single_file, "r")
+    part_dm_mass = hdf["Header"].attrs["MassTable"][1]
+    hdf.close()
 
     # Define the NULL value in GADGET files
     null = 1073741824
@@ -52,21 +59,6 @@ def get_data(tictoc, reg, tag):
     # Get the number of particles we are dealing with
     npart = part_ids.size
     true_npart = true_part_ids.size
-
-    # Define master file path so we can simply get the DM part mass
-    master_path = rF"/cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/" \
-                  rF"data/FLARES_{reg}_sp_info.hdf5"
-
-    # Get master file data and compute the DM particle mass
-    with h5py.File(master_path, "r") as hf:
-        temp_dm_len = np.array(hf[tag + "/Galaxy"].get("DM_Length"),
-                          dtype=np.int64)
-        subgrp_dm_mass = np.array(hf[tag + "/Galaxy"].get("Mdm"),
-                                  dtype=np.float64) * 10 ** 10
-        try:
-            part_dm_mass = subgrp_dm_mass[0] / temp_dm_len[0]
-        except IndexError:
-            part_dm_mass = 0
 
     # Let's bin the particles and split the work up
     rank_bins = np.linspace(0, npart, size + 1, dtype=int)
