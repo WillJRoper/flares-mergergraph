@@ -67,7 +67,7 @@ def main(reg):
     (inputs, flags, params, cosmology,
      simulation) = p_utils.read_param(paramfile)
 
-    snap_ind = int(sys.argv[2])
+    snap_ind = int(sys.argv[3])
 
     # Load the snapshot list
     snaplist = ["000_z015p000", "001_z014p000", "002_z013p000", "003_z012p000",
@@ -138,3 +138,7 @@ for reg in range(0, 40):
         regions.append("0" + str(reg))
     else:
         regions.append(str(reg))
+
+
+if __name__ == "__main__":
+    main(regions[int(sys.argv[2])])
