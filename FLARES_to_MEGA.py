@@ -37,6 +37,7 @@ def get_data(tictoc, reg, tag):
     # Open single file and get DM particle mass
     hdf = h5py.File(single_file, "r")
     part_dm_mass = hdf["Header"].attrs["MassTable"][1] * 10 ** 10
+    print(hdf["Header"].attrs["MassTable"])
     hdf.close()
 
     # Define the NULL value in GADGET files
