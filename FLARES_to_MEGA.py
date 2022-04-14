@@ -174,7 +174,7 @@ def main(reg):
             tictoc.report("Combining results")
 
         # Write out file
-        write_data(tictoc, meta, ihalo, newPhaseSubID=0,
+        write_data(tictoc, meta, ihalo, nsubhalo=0,
                    results_dict=results_dict, sub_results_dict={},
                    pre_sort_part_haloids=None, sim_pids=dm_snap_part_ids)
 
