@@ -249,7 +249,7 @@ def main(reg):
                     dm_len[rank_halobins[rank]: rank_halobins[rank + 1]]):
         # Compute end
         e = b + l
-        print(dm_pos[b:e, :].shape, dm_masses[b:e].shape)
+
         # Store this halo
         results[ihalo] = Halo(tictoc, dm_ind[b:e], None, dm_pid[b:e],
                               dm_pos[b:e, :], dm_vel[b:e, :],
@@ -268,8 +268,7 @@ def main(reg):
         # Lets combine all the halos we have collected from the other ranks
         res_tup = collect_halos(tictoc, meta, collected_results,
                                 [{}, ] * size)
-        (newPhaseID, newPhaseSubID, results_dict, haloID_dict,
-         sub_results_dict, subhaloID_dict, phase_part_haloids) = res_tup
+        (newPhaseID, newPhaseSubID, results_dict, sub_results_dict) = res_tup
 
         if meta.verbose:
             tictoc.report("Combining results")
