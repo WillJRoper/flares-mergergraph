@@ -168,21 +168,36 @@ def get_data(tictoc, reg, tag):
             sorted_halos["dm_masses"], part_ids, true_npart)
 
 
-def main(reg):
+def main():
+
+    # Make the region list
+    regions = []
+    for reg in range(0, 40):
+        if reg < 10:
+            regions.append("0" + str(reg))
+        else:
+            regions.append(str(reg))
+
     # Read the parameter file
     paramfile = sys.argv[1]
     (inputs, flags, params, cosmology,
      simulation) = p_utils.read_param(paramfile)
 
-    snap_ind = int(sys.argv[3])
+    snap_ind = int(sys.argv[2])
 
     # Load the snapshot list
     snaplist = ["000_z015p000", "001_z014p000", "002_z013p000", "003_z012p000",
                 "004_z011p000", "005_z010p000", "006_z009p000", "007_z008p000",
                 "008_z007p000", "009_z006p000", "010_z005p000", "011_z004p770"]
 
-    # Get snapshot
-    snap = snaplist[snap_ind]
+    reg_snaps = []
+    for reg in reversed(regions):
+
+        for snap in snaplist:
+            reg_snaps.append((reg, snap))
+
+    # Get snapshot and region
+    reg, snap = reg_snaps[snap_ind]
 
     # Get redshift
     z_str = snap.split('z')[1].split('p')
@@ -276,7 +291,7 @@ def main(reg):
         # Write out file
         write_data(tictoc, meta, newPhaseID, newPhaseSubID,
                    results_dict=results_dict, sub_results_dict={},
-                   sim_pids=dm_snap_part_ids)
+                   sim_pids=dm_snap_part_ids, basename_mod=reg)
 
         if meta.verbose:
             tictoc.report("Writing")
@@ -285,12 +300,5 @@ def main(reg):
     tictoc.end_report(comm)
 
 
-regions = []
-for reg in range(0, 40):
-    if reg < 10:
-        regions.append("0" + str(reg))
-    else:
-        regions.append(str(reg))
-
 if __name__ == "__main__":
-    main(regions[int(sys.argv[2])])
+    main()
