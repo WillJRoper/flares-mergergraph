@@ -199,14 +199,13 @@ def main():
 
     # Get snapshot and region
     reg, snap = reg_snaps[job_ind]
-    message(rank, "Job:%d Reg:%s Snap:%s" % (job_ind, reg, snap))
 
     # Get redshift
     z_str = snap.split('z')[1].split('p')
     z = float(z_str[0] + '.' + z_str[1])
 
     # Set up object containing housekeeping metadata
-    meta = p_utils.Metadata(snaplist, snap_ind, cosmology,
+    meta = p_utils.Metadata(snaplist, np.where(snaplist == snap)[0], cosmology,
                             params["llcoeff"], params["sub_llcoeff"], inputs,
                             None,
                             inputs["haloSavePath"], params["ini_alpha_v"],
