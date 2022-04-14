@@ -164,7 +164,7 @@ def main(reg):
 
     if rank == 0:
 
-        # Lets collect all the halos we have collected from the other ranks
+        # Lets combine all the halos we have collected from the other ranks
         res_tup = collect_halos(tictoc, meta, collected_results,
                                 [{}, ] * size)
         (newPhaseID, newPhaseSubID, results_dict, haloID_dict,
@@ -174,7 +174,7 @@ def main(reg):
             tictoc.report("Combining results")
 
         # Write out file
-        write_data(tictoc, meta, ihalo, nsubhalo=0,
+        write_data(tictoc, meta, newPhaseID, newPhaseSubID,
                    results_dict=results_dict, sub_results_dict={},
                    pre_sort_part_haloids=None, sim_pids=dm_snap_part_ids)
 
