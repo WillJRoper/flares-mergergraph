@@ -133,6 +133,7 @@ def get_data(tictoc, reg, tag):
         for ihalo, key in enumerate(keys):
             
             # Get group and subgroup ID
+            key = tuple(key)
             grp, subgrp = key[0], key[1]
             
             # Store data
