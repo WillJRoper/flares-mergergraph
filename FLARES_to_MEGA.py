@@ -147,6 +147,13 @@ def get_data(tictoc, reg, tag):
             sorted_halos["dm_vel"].extend(halos["dm_vel"][key])
             sorted_halos["dm_masses"].extend(halos["dm_masses"][key])
 
+        # Convert all keys to arrays
+        sorted_halos["dm_pid"] = np.array(sorted_halos["dm_pid"], dtype=int)
+        sorted_halos["dm_ind"] = np.array(sorted_halos["dm_ind"], dtype=int)
+        sorted_halos["dm_pos"] = np.array(sorted_halos["dm_pos"], dtype=int)
+        sorted_halos["dm_vel"] = np.array(sorted_halos["dm_vel"], dtype=int)
+        sorted_halos["dm_masses"] = np.array(sorted_halos["dm_masses"], dtype=int)
+
     else:
         sorted_halos = None
             
