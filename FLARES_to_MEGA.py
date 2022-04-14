@@ -27,7 +27,7 @@ status = MPI.Status()  # get MPI status object
 
 
 @timer("Reading")
-def get_data(reg, tag):
+def get_data(tictoc, reg, tag):
     # Define sim path
     sim_path = "/cosma/home/dp004/dc-rope1/FLARES/FLARES-1/" \
                "G-EAGLE_" + reg + "/data/"
@@ -207,7 +207,7 @@ def main(reg):
 
     # Get the particle data for all particle types in the current snapshot
     (dm_len, grpid, subgrpid, dm_pid, dm_ind, dmbegin, dm_pos, dm_vel,
-     dm_masses, dm_snap_part_ids) = get_data(reg, snap)
+     dm_masses, dm_snap_part_ids) = get_data(tictoc, reg, snap)
 
     # Set npart
     meta.npart[1] = dm_snap_part_ids.size
