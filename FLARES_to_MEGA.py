@@ -68,6 +68,7 @@ def get_data(ii, tag, inp="FLARES"):
                                     "FLARES-1/G-EAGLE_" + str(reg) + "/data",
                                      tag, "PartType1/ParticleIDs",
                                      numThreads=8)
+    print(reg, tag)
 
     return (dm_len, grpid, subgrpid, dm_pid, dm_ind, dmbegin, dmend,
             dm_pos, dm_vel, dm_masses, dm_snap_part_ids)
