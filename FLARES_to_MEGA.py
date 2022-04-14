@@ -13,6 +13,7 @@ from core.timing import TicToc
 from core.collect_result import collect_halos
 from core.talking_utils import say_hello
 from core.talking_utils import message
+import core.utilities as utils
 
 
 mpi4py.rc.recv_mprobe = False
@@ -150,6 +151,7 @@ def main(reg):
         results[ihalo] = Halo(tictoc, dm_ind[b:e], None, dm_pid[b:e], 
                               dm_pos[b:e, :], dm_vel[b:e, :], dm_part_types[b:e],
                               dm_masses[b:e], 10, meta)
+        results[ihalo].memory = utils.get_size(results[ihalo])
         ihalo += 1
 
     # Collect child process results
