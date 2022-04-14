@@ -125,7 +125,7 @@ def main(reg):
     meta.npart[1] = dm_snap_part_ids.size
 
     if rank == 0:
-        message(rank, "Npart: %d~%d" % (meta.npart[1],
+        message(rank, "Npart: %d ~ %d^3" % (meta.npart[1],
                                         int(meta.npart[1] ** (1/3))))
         message(rank, "Nhalo: %d" % len(dmbegin))
 
