@@ -228,7 +228,6 @@ def main(reg):
         message(rank, "Nhalo: %d" % len(dmbegin))
 
     # Define part type array
-    print(dm_pid.shape)
     dm_part_types = np.full_like(dm_pid, 1)
 
     # Initialise dictionary for mega halo objects
@@ -250,7 +249,7 @@ def main(reg):
                     dm_len[rank_halobins[rank]: rank_halobins[rank + 1]]):
         # Compute end
         e = b + l
-
+        print(dm_pos[b:e, :].shape, dm_masses[b:e].shape)
         # Store this halo
         results[ihalo] = Halo(tictoc, dm_ind[b:e], None, dm_pid[b:e],
                               dm_pos[b:e, :], dm_vel[b:e, :],
