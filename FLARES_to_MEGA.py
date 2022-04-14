@@ -25,50 +25,64 @@ rank = comm.rank  # rank of this process
 status = MPI.Status()  # get MPI status object
 
 
-def get_data(ii, tag, inp="FLARES"):
-    num = str(ii)
-    if inp == "FLARES":
-        if len(num) == 1:
-            num = "0" + num
+def get_data(reg, tag):
 
-        sim = rF"/cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/data/" \
-              rF"FLARES_{num}_sp_info.hdf5"
+    # Define sim path
+    sim_path = "/cosma/home/dp004/dc-rope1/FLARES/ FLARES-1/" \
+               "G-EAGLE_" + reg + "/data"
 
-    else:
-        sim = rF"/cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/data/" \
-              rF"EAGLE_{inp}_sp_info.hdf5"
+    # Read in all the relevant data
+    part_ids = E.read_array("SNAP", sim_path, tag,
+                            "PartType1/ParticleIDs", numThreads=8)
+    part_grp_ids = E.read_array("SNAP", sim_path, tag,
+                                "PartType1/GroupNumber", numThreads=8)
+    part_subgrp_ids = E.read_array("SNAP", sim_path, tag,
+                                "PartType1/SubGroupNumber", numThreads=8)
+    part_pos = E.read_array("SNAP", sim_path, tag,
+                                "PartType1/Coordinates", numThreads=8)
+    part_vel = E.read_array("SNAP", sim_path, tag,
+                                "PartType1/Velocity", numThreads=8)
 
-    # Get dark matter datasets
-    with h5py.File(sim, "r") as hf:
+    # Get the number of particles we are dealing with
+    npart = part_ids.size
+
+    # Define master file path so we can simply get the DM part mass
+    master_path = rF"/cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/" \
+                  rF"data/FLARES_{reg}_sp_info.hdf5"
+
+    # Get master file data and compute the DM particle mass
+    with h5py.File(master_path, "r") as hf:
         dm_len = np.array(hf[tag + "/Galaxy"].get("DM_Length"),
                           dtype=np.int64)
-        grpid = np.array(hf[tag + "/Galaxy"].get("GroupNumber"),
-                         dtype=np.int64)
-        subgrpid = np.array(hf[tag + "/Galaxy"].get("SubGroupNumber"),
-                            dtype=np.int64)
-        dm_pid = np.array(hf[tag + "/Particle"].get("DM_ID"),
-                          dtype=np.int64)
-        dm_ind = np.array(hf[tag + "/Particle"].get("DM_Index"),
-                          dtype=np.int64)
-        dm_pos = np.array(hf[tag + "/Particle"].get("DM_Coordinates"),
-                          dtype=np.float64).T
-        dm_vel = np.array(hf[tag + "/Particle"].get("DM_Vel"),
-                          dtype=np.float64).T
         subgrp_dm_mass = np.array(hf[tag + "/Galaxy"].get("Mdm"),
                                   dtype=np.float64) * 10 ** 10
         part_dm_mass = subgrp_dm_mass / dm_len
-        dm_masses = np.full(dm_pid.size, part_dm_mass[0], dtype=np.float64)
+
+    # Let's bin the particles and split the work up
+    rank_bins = np.linspace(0, npart, size + 1, dtype=int)
+
+    # Initialise dictionary to store sorted particles
+    halos = {"length": {}, "grpid": {}, "subgrpid": {}, "dm_pid": {},
+             "dm_ind": {}, "dm_pos": {}, "dm_vel": {}, "dm_masses": {}}
+
+    # Define the NULL value in GADGET files
+    null = 2**30
+
+    # Loop over the particles on this rank
+    for ind in range(rank_bins[rank], rank_bins[rank + 1]):
+        print(part_subgrp_ids[ind])
+        # Is this particle in a subgroup?
+        if part_subgrp_ids[ind] == null:
+            continue
+
 
     # Create pointer arrays
     dmbegin = np.zeros(len(dm_len), dtype=np.int64)
     dmbegin[1:] = np.cumsum(dm_len)[:-1]
     dmend = np.cumsum(dm_len)
     
-    dm_snap_part_ids = E.read_array("SNAP", 
-                                    "/cosma/home/dp004/dc-rope1/FLARES/"
-                                    "FLARES-1/G-EAGLE_" + num + "/data",
-                                     tag, "PartType1/ParticleIDs",
-                                     numThreads=8)
+    dm_snap_part_ids = E.read_array("SNAP", sim_path, tag,
+                                    "PartType1/ParticleIDs", numThreads=8)
 
     return (dm_len, grpid, subgrpid, dm_pid, dm_ind, dmbegin, dmend,
             dm_pos, dm_vel, dm_masses, dm_snap_part_ids)
@@ -140,7 +154,12 @@ def main(reg):
     results = {}
 
     # Split up galaxies across nodes
-    rank_halobins = np.linspace(0, len(dmbegin), size + 1, dtype=int)
+    if len(dmbegin) > meta.nranks:
+        rank_halobins = np.linspace(0, len(dmbegin), size + 1, dtype=int)
+    else:
+        rank_halobins = []
+        for halo in range(len(dmbegin)):
+            rank_halobins.append()
 
     # Loop over galaxies and create mega objects
     ihalo = rank_halobins[rank]
@@ -176,7 +195,7 @@ def main(reg):
         # Write out file
         write_data(tictoc, meta, newPhaseID, newPhaseSubID,
                    results_dict=results_dict, sub_results_dict={},
-                   pre_sort_part_haloids=None, sim_pids=dm_snap_part_ids)
+                   sim_pids=dm_snap_part_ids)
 
         if meta.verbose:
             tictoc.report("Writing")
