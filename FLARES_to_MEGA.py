@@ -109,6 +109,9 @@ def main(reg):
                             dmo=True, periodic=0, boxsize=[3200, 3200, 3200],
                             npart=[0, 10**7, 0, 0, 0, 0], z=z, tot_mass=10**13)
 
+    meta.rank = rank
+    meta.nranks = size
+
     if rank == 0:
         say_hello(meta)
         message(rank, "Running on Region %s and snap %s" % (reg, snap))
