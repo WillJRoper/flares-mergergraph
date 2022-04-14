@@ -85,7 +85,7 @@ def get_data(tictoc, reg, tag):
         # Add this particle to the halo
         halos["length"].setdefault(key, 0)
         halos["length"][key] += 1
-        halos["dm_pid"].setdefault(key, []).append(part_ids)
+        halos["dm_pid"].setdefault(key, []).append(part_ids[ind])
         halos["dm_ind"].setdefault(key, []).append(ind)
         halos["dm_pos"].setdefault(key, []).append(part_pos[ind, :])
         halos["dm_vel"].setdefault(key, []).append(part_vel[ind, :])
@@ -150,9 +150,10 @@ def get_data(tictoc, reg, tag):
         # Convert all keys to arrays
         sorted_halos["dm_pid"] = np.array(sorted_halos["dm_pid"], dtype=int)
         sorted_halos["dm_ind"] = np.array(sorted_halos["dm_ind"], dtype=int)
-        sorted_halos["dm_pos"] = np.array(sorted_halos["dm_pos"], dtype=int)
-        sorted_halos["dm_vel"] = np.array(sorted_halos["dm_vel"], dtype=int)
-        sorted_halos["dm_masses"] = np.array(sorted_halos["dm_masses"], dtype=int)
+        sorted_halos["dm_pos"] = np.array(sorted_halos["dm_pos"], dtype=np.float64)
+        sorted_halos["dm_vel"] = np.array(sorted_halos["dm_vel"], dtype=np.float64)
+        sorted_halos["dm_masses"] = np.array(sorted_halos["dm_masses"],
+                                             dtype=np.float64)
 
     else:
         sorted_halos = None
