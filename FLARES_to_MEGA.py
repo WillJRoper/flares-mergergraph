@@ -27,7 +27,7 @@ status = MPI.Status()  # get MPI status object
 
 
 @timer("Reading")
-def get_data(tictoc, reg, tag):
+def get_data(tictoc, reg, tag, meta):
 
     # Define sim path
     sim_path = "/cosma/home/dp004/dc-rope1/FLARES/FLARES-1/" \
@@ -36,8 +36,7 @@ def get_data(tictoc, reg, tag):
 
     # Open single file and get DM particle mass
     hdf = h5py.File(single_file, "r")
-    part_dm_mass = hdf["Header"].attrs["MassTable"][1] * 10 ** 10
-    print(hdf["Header"].attrs["MassTable"])
+    part_dm_mass = hdf["Header"].attrs["MassTable"][1] * 10 ** 10 / meta.h
     hdf.close()
 
     # Define the NULL value in GADGET files
@@ -55,10 +54,8 @@ def get_data(tictoc, reg, tag):
     part_pos = E.read_array("PARTDATA", sim_path, tag,
                             "PartType1/Coordinates", numThreads=8, noH=True)
     part_vel = E.read_array("PARTDATA", sim_path, tag,
-                            "PartType1/Velocity", numThreads=8, noH=True, physicalUnits=True)
-
-    _ = E.read_array("PARTDATA", sim_path, tag,
-                            "PartType0/Mass", numThreads=8, noH=True, physicalUnits=True)
+                            "PartType1/Velocity", numThreads=8, noH=True,
+                            physicalUnits=True)
 
     # Get the number of particles we are dealing with
     npart = part_ids.size
@@ -244,7 +241,8 @@ def main():
 
     # Get the particle data for all particle types in the current snapshot
     (dm_len, grpid, subgrpid, dm_pid, dm_ind, dmbegin, dm_pos, dm_vel,
-     dm_masses, dm_snap_part_ids, true_npart) = get_data(tictoc, reg, snap)
+     dm_masses, dm_snap_part_ids, true_npart) = get_data(tictoc, reg,
+                                                        snap, meta)
 
     # Set npart
     meta.npart[1] = dm_snap_part_ids.size
