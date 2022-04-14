@@ -90,9 +90,6 @@ def main(reg):
     # Get snapshot
     snap = snaplist[snap_ind]
 
-    if rank == 0:
-        message(rank, "Running on Region %s and snap %s" % (reg, snap))
-
     # Get redshift
     z_str = snap.split('z')[1].split('p')
     z = float(z_str[0] + '.' + z_str[1])
@@ -113,6 +110,7 @@ def main(reg):
 
     if rank == 0:
         say_hello(meta)
+        message(rank, "Running on Region %s and snap %s" % (reg, snap))
 
     # Instantiate timer
     tictoc = TicToc(meta)
@@ -137,7 +135,7 @@ def main(reg):
     results = {}
 
     # Split up galaxies across nodes
-    rank_halobins = np.linspace(0, len(dmbegin), size + 1)
+    rank_halobins = np.linspace(0, len(dmbegin), size + 1, dtype=int)
 
     # Loop over galaxies and create mega objects
     ihalo = rank_halobins[rank]
