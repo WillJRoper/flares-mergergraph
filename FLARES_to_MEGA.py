@@ -2,6 +2,9 @@ import sys
 
 import core.param_utils as p_utils
 import core.utilities as utils
+import h5py
+import mpi4py
+import numpy as np
 from core.collect_result import collect_halos
 from core.halo import Halo
 from core.serial_io import write_data
@@ -9,11 +12,7 @@ from core.talking_utils import message
 from core.talking_utils import say_hello
 from core.timing import TicToc
 from core.timing import timer
-
 from mpi4py import MPI
-import h5py
-import mpi4py
-import numpy as np
 
 from eagle_IO import eagle_IO as E
 
@@ -28,7 +27,6 @@ status = MPI.Status()  # get MPI status object
 
 @timer("Reading")
 def get_data(tictoc, reg, tag, meta, inputpath):
-
     # Define sim path
     sim_path = inputpath.replace("<reg>", reg)
     single_file = sim_path + "snapshot_" + tag + "/snap_" + tag + ".0.hdf5"
@@ -43,7 +41,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
     # Read in all the relevant data
     true_part_ids = E.read_array("SNAP", sim_path, tag,
-                            "PartType1/ParticleIDs", numThreads=8)
+                                 "PartType1/ParticleIDs", numThreads=8)
     part_ids = E.read_array("PARTDATA", sim_path, tag,
                             "PartType1/ParticleIDs", numThreads=8)
     part_grp_ids = E.read_array("PARTDATA", sim_path, tag,
@@ -97,7 +95,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
             # Loop over halos
             for key in d["length"]:
-
                 # Add this particle to the halo
                 halos["length"].setdefault(key, 0)
                 halos["length"][key] += d["length"][key]
@@ -127,22 +124,21 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         vals = np.array(list(vals), dtype=int)
         sinds = np.argsort(vals)
         keys = keys[sinds, :]
-        
+
         # Define dictionary holding the sorted results
         sorted_halos = {"dm_begin": np.zeros(keys.shape[0], dtype=int),
                         "dm_len": np.zeros(keys.shape[0], dtype=int),
                         "grpid": np.zeros(keys.shape[0], dtype=int),
                         "subgrpid": np.zeros(keys.shape[0], dtype=int),
-                        "dm_pid": [], "dm_ind": [], "dm_pos": [], 
+                        "dm_pid": [], "dm_ind": [], "dm_pos": [],
                         "dm_vel": [], "dm_masses": []}
-        
+
         # Loop over keys storing their results
         for ihalo, key in enumerate(keys):
-            
             # Get group and subgroup ID
             key = tuple(key)
             grp, subgrp = key[0], key[1]
-            
+
             # Store data
             sorted_halos["dm_begin"][ihalo] = len(sorted_halos["dm_pid"])
             sorted_halos["dm_len"][ihalo] = halos["length"][key]
@@ -157,14 +153,16 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         # Convert all keys to arrays
         sorted_halos["dm_pid"] = np.array(sorted_halos["dm_pid"], dtype=int)
         sorted_halos["dm_ind"] = np.array(sorted_halos["dm_ind"], dtype=int)
-        sorted_halos["dm_pos"] = np.array(sorted_halos["dm_pos"], dtype=np.float64)
-        sorted_halos["dm_vel"] = np.array(sorted_halos["dm_vel"], dtype=np.float64)
+        sorted_halos["dm_pos"] = np.array(sorted_halos["dm_pos"],
+                                          dtype=np.float64)
+        sorted_halos["dm_vel"] = np.array(sorted_halos["dm_vel"],
+                                          dtype=np.float64)
         sorted_halos["dm_masses"] = np.array(sorted_halos["dm_masses"],
                                              dtype=np.float64)
 
     else:
         sorted_halos = None
-            
+
     # Lets broadcast what we've combined
     sorted_halos = comm.bcast(sorted_halos, root=0)
 
@@ -176,7 +174,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
 
 def main():
-
     # Make the region list
     regions = []
     for reg in range(0, 40):
@@ -190,13 +187,16 @@ def main():
     (inputs, flags, params, cosmology,
      simulation) = p_utils.read_param(paramfile)
 
+    # Get job index
     job_ind = int(sys.argv[2])
-    snap_ind = job_ind % len(regions)
 
     # Load the snapshot list
-    snaplist = np.array(["000_z015p000", "001_z014p000", "002_z013p000", "003_z012p000",
-                         "004_z011p000", "005_z010p000", "006_z009p000", "007_z008p000",
-                         "008_z007p000", "009_z006p000", "010_z005p000", "011_z004p770"])
+    snaplist = ["000_z015p000", "001_z014p000", "002_z013p000", "003_z012p000",
+                "004_z011p000", "005_z010p000", "006_z009p000", "007_z008p000",
+                "008_z007p000", "009_z006p000", "010_z005p000", "011_z004p770"]
+
+    # Get the snapshot index
+    snap_ind = job_ind % len(snaplist)
 
     reg_snaps = []
     for reg in reversed(regions):
@@ -212,7 +212,7 @@ def main():
     z = float(z_str[0] + '.' + z_str[1])
 
     # Set up object containing housekeeping metadata
-    meta = p_utils.Metadata(snaplist, np.where(snaplist == snap)[0], cosmology,
+    meta = p_utils.Metadata(snaplist, snap_ind, cosmology,
                             params["llcoeff"], params["sub_llcoeff"], inputs,
                             None,
                             inputs["haloSavePath"], params["ini_alpha_v"],
