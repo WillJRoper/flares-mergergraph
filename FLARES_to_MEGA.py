@@ -330,12 +330,66 @@ def main():
                               dm_pid[b:e], dm_pos[b:e, :], dm_vel[b:e, :],
                               dm_part_types[b:e],
                               dm_masses[b:e], 10, meta)
+        results[ihalo].clean_halo()
         results[ihalo].memory = utils.get_size(results[ihalo])
         ihalo += 1
 
-    # Collect child process results
+    # Collect results from all processes bit by bit
     tictoc.start_func_time("Collecting")
-    collected_results = comm.gather(results, root=0)
+
+    # We're collecting to master
+    if rank == 0:
+
+        # Define the number of ranks we must receive from
+        send_ranks = size - 1
+        closed_workers = 0
+
+        # Initialise list of collected results
+        collected_results = [results, ]
+
+        # Loop until nothing left to receive
+        while closed_workers < send_ranks:
+            data = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG,
+                             status=status)
+            tag = status.Get_tag()
+
+            if tag == 0:
+
+                # Store received results
+                collected_results.append(data)
+
+            elif tag == 1:
+
+                closed_workers += 1
+
+    else:
+
+        collected_results = None
+
+        # Loop until we've sent all our results
+        while len(results) > 0:
+
+            # Get some results to send
+            # (limiting to 1GB of communication for safety)
+            subset = {}
+            subset_size = 0
+            while subset_size < 1024:
+
+                # Get halo
+                key, halo = results.popitem()
+                
+                # Add this halos memory
+                subset_size += halo.memory * 10 ** -6
+
+                # Include this halo
+                subset[key] = halo
+
+            # Send the halo subset
+            comm.send(subset, dest=0, tag=0)
+
+        # Send the finished signal
+        comm.send(None, dest=0, tag=1)
+
     tictoc.stop_func_time()
 
     if rank == 0:
