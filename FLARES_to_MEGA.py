@@ -373,11 +373,11 @@ def main():
             # (limiting to 1GB of communication for safety)
             subset = {}
             subset_size = 0
-            while subset_size < 1024:
+            while subset_size < 1024 and len(results) > 0:
 
                 # Get halo
                 key, halo = results.popitem()
-                
+
                 # Add this halos memory
                 subset_size += halo.memory * 10 ** -6
 
