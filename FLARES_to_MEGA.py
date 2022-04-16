@@ -62,12 +62,12 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     rank_bins = np.linspace(0, npart, size + 1, dtype=int)
 
     # Initialise dictionaries to store sorted particles
-    length = {}
-    dm_pid = {}
-    dm_ind = {}
-    dm_pos = {}
-    dm_vel = {}
-    dm_masses = {}
+    length_dict = {}
+    dm_pid_dict = {}
+    dm_ind_dict = {}
+    dm_pos_dict = {}
+    dm_vel_dict = {}
+    dm_masses_dict = {}
 
     # Loop over the particles on this rank
     for ind in range(rank_bins[rank], rank_bins[rank + 1]):
@@ -80,21 +80,21 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         key = (part_grp_ids[ind], part_subgrp_ids[ind])
 
         # Add this particle to the halo
-        length.setdefault(key, 0)
-        length[key] += 1
-        dm_pid.setdefault(key, []).append(part_ids[ind])
-        dm_ind.setdefault(key, []).append(ind)
-        dm_pos.setdefault(key, []).append(part_pos[ind, :])
-        dm_vel.setdefault(key, []).append(part_vel[ind, :])
-        dm_masses.setdefault(key, []).append(part_dm_mass)
+        length_dict.setdefault(key, 0)
+        length_dict[key] += 1
+        dm_pid_dict.setdefault(key, []).append(part_ids[ind])
+        dm_ind_dict.setdefault(key, []).append(ind)
+        dm_pos_dict.setdefault(key, []).append(part_pos[ind, :])
+        dm_vel_dict.setdefault(key, []).append(part_vel[ind, :])
+        dm_masses_dict.setdefault(key, []).append(part_dm_mass)
 
     # Now need collect on master
-    all_length = comm.gather(length, root=0)
-    all_dm_pid = comm.gather(dm_pid, root=0)
-    all_dm_ind = comm.gather(dm_ind, root=0)
-    all_dm_pos = comm.gather(dm_pos, root=0)
-    all_dm_vel = comm.gather(dm_vel, root=0)
-    all_dm_masses = comm.gather(dm_masses, root=0)
+    all_length = comm.gather(length_dict, root=0)
+    all_dm_pid = comm.gather(dm_pid_dict, root=0)
+    all_dm_ind = comm.gather(dm_ind_dict, root=0)
+    all_dm_pos = comm.gather(dm_pos_dict, root=0)
+    all_dm_vel = comm.gather(dm_vel_dict, root=0)
+    all_dm_masses = comm.gather(dm_masses_dict, root=0)
     if rank == 0:
 
         # Loop over halos from other ranks
@@ -105,30 +105,31 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             # Loop over halos
             for key in all_length[r]:
                 # Add this particle to the halo
-                length.setdefault(key, 0)
-                length[key] += all_length[r][key]
+                length_dict.setdefault(key, 0)
+                length_dict[key] += all_length[r][key]
 
-                dm_pid.setdefault(key, []).extend(all_dm_pid[r][key])
-                dm_ind.setdefault(key, []).extend(all_dm_ind[r][key])
-                dm_pos.setdefault(key, []).extend(all_dm_pos[r][key])
-                dm_vel.setdefault(key, []).extend(all_dm_vel[r][key])
-                dm_masses.setdefault(key, []).extend(all_dm_masses[r][key])
+                dm_pid_dict.setdefault(key, []).extend(all_dm_pid[r][key])
+                dm_ind_dict.setdefault(key, []).extend(all_dm_ind[r][key])
+                dm_pos_dict.setdefault(key, []).extend(all_dm_pos[r][key])
+                dm_vel_dict.setdefault(key, []).extend(all_dm_vel[r][key])
+                dm_masses_dict.setdefault(key,
+                                          []).extend(all_dm_masses[r][key])
 
         # Loop over halos and clean any spurious (npart<10)
-        ini_keys = list(length.keys())
+        ini_keys = list(length_dict.keys())
         for key in ini_keys:
 
-            if length[key] < 10:
-                del length[key]
-                del dm_pid[key]
-                del dm_ind[key]
-                del dm_pos[key]
-                del dm_vel[key]
-                del dm_masses[key]
+            if length_dict[key] < 10:
+                del length_dict[key]
+                del dm_pid_dict[key]
+                del dm_ind_dict[key]
+                del dm_pos_dict[key]
+                del dm_vel_dict[key]
+                del dm_masses_dict[key]
 
         # Now we can sort our halos
-        keys = length.keys()
-        vals = length.values()
+        keys = length_dict.keys()
+        vals = length_dict.values()
         keys = np.array(list(keys), dtype=object)
         vals = np.array(list(vals), dtype=int)
         sinds = np.argsort(vals)
@@ -154,14 +155,14 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
             # Store data
             dm_begin[ihalo] = len(dm_pid)
-            dm_len[ihalo] = length[key]
+            dm_len[ihalo] = length_dict[key]
             grpid[ihalo] = grp
             subgrpid[ihalo] = subgrp
-            dm_pid.extend(dm_pid[key])
-            dm_ind.extend(dm_ind[key])
-            dm_pos.extend(dm_pos[key])
-            dm_vel.extend(dm_vel[key])
-            dm_masses.extend(dm_masses[key])
+            dm_pid.extend(dm_pid_dict[key])
+            dm_ind.extend(dm_ind_dict[key])
+            dm_pos.extend(dm_pos_dict[key])
+            dm_vel.extend(dm_vel_dict[key])
+            dm_masses.extend(dm_masses_dict[key])
 
         # Convert all keys to arrays
         dm_pid = np.array(dm_pid, dtype=int)
