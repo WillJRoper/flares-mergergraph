@@ -193,7 +193,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     npart_sorted = comm.bcast(npart_sorted, root=0)
 
     # Create receive buffers
-    if rank == 0:
+    if rank != 0:
         dm_begin = np.empty(nhalos, dtype=int)
         dm_len = np.empty(nhalos, dtype=int)
         grpid = np.empty(nhalos, dtype=int)
