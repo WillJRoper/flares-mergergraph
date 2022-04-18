@@ -202,6 +202,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 ihalo += 1
 
         # Get how many particles each rank should expect
+        print(halos_on_rank)
         nparts_on_rank = [0, ] * size
         for r, halos in enumerate(halos_on_rank):
             print(r, halos)
