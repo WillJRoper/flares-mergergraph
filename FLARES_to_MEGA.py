@@ -137,15 +137,16 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
         # Define arrays and lists to hold sorted halos
         nhalos = keys.shape[0]
-        dm_begin = np.zeros(nhalos, dtype=int)
-        dm_len = np.zeros(nhalos, dtype=int)
-        grpid = np.zeros(nhalos, dtype=int)
-        subgrpid = np.zeros(nhalos, dtype=int)
-        dm_pid = []
-        dm_ind = []
-        dm_pos = []
-        dm_vel = []
-        dm_masses = []
+        all_dm_begin = np.zeros(nhalos, dtype=int)
+        all_dm_len = np.zeros(nhalos, dtype=int)
+        all_grpid = np.zeros(nhalos, dtype=int)
+        all_subgrpid = np.zeros(nhalos, dtype=int)
+        all_halo_ids = np.zeros(nhalos, dtype=int)
+        all_dm_pid = []
+        all_dm_ind = []
+        all_dm_pos = []
+        all_dm_vel = []
+        all_dm_masses = []
 
         # Loop over keys storing their results
         for ihalo, key in enumerate(keys):
@@ -154,30 +155,66 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             grp, subgrp = key[0], key[1]
 
             # Store data
-            dm_begin[ihalo] = len(dm_pid)
-            dm_len[ihalo] = length_dict[key]
-            grpid[ihalo] = grp
-            subgrpid[ihalo] = subgrp
-            dm_pid.extend(dm_pid_dict[key])
-            dm_ind.extend(dm_ind_dict[key])
-            dm_pos.extend(dm_pos_dict[key])
-            dm_vel.extend(dm_vel_dict[key])
-            dm_masses.extend(dm_masses_dict[key])
+            all_halo_ids[ihalo] = ihalo
+            all_dm_begin[ihalo] = len(all_dm_pid)
+            all_dm_len[ihalo] = length_dict[key]
+            all_grpid[ihalo] = grp
+            all_subgrpid[ihalo] = subgrp
+            all_dm_pid.extend(dm_pid_dict[key])
+            all_dm_ind.extend(dm_ind_dict[key])
+            all_dm_pos.extend(dm_pos_dict[key])
+            all_dm_vel.extend(dm_vel_dict[key])
+            all_dm_masses.extend(dm_masses_dict[key])
 
         # Convert all keys to arrays
-        dm_pid = np.array(dm_pid, dtype=int)
-        dm_ind = np.array(dm_ind, dtype=int)
-        dm_pos = np.array(dm_pos, dtype=np.float64)
-        dm_vel = np.array(dm_vel, dtype=np.float64)
-        dm_masses = np.array(dm_masses, dtype=np.float64)
+        all_dm_pid = np.array(all_dm_pid, dtype=int)
+        all_dm_ind = np.array(all_dm_ind, dtype=int)
+        all_dm_pos = np.array(all_dm_pos, dtype=np.float64)
+        all_dm_vel = np.array(all_dm_vel, dtype=np.float64)
+        all_dm_masses = np.array(all_dm_masses, dtype=np.float64)
 
         # Define the number of particles sorted
-        npart_sorted = len(dm_pid)
+        npart_sorted = len(all_dm_pid)
 
-    else:
-        nhalos = None
-        npart_sorted = None
-        dm_begin = None
+        # Lets bin the halos onto ranks
+        shared_npart = npart_sorted / size
+
+        # Loop over ranks populating them with roughly equal numbers
+        # of particles
+        halos_on_rank = {r: [] for r in range(size)}
+        ihalo = 0
+        for r in range(size):
+
+            # Keep track of allocated particles
+            nparts_to_send = 0
+
+            # Allocate this halo
+            while nparts_to_send <= shared_npart:
+                halos_on_rank[r].append(ihalo)
+                nparts_to_send += all_dm_len[ihalo]
+                ihalo += 1
+
+            # Allocate any leftovers
+            # NOTE: leads to the last rank having 
+            while ihalo < all_dm_len.size:
+                halos_on_rank[r].append(ihalo)
+                ihalo += 1
+
+        # Get how many particles each rank should expect
+        nparts_on_rank = [0, ] * size
+        for r, halos in enumerate(halos_on_rank):
+            for ihalo in halos:
+                nparts_on_rank[r] += all_dm_len[ihalo]
+
+        # Get how many halos each rank should expect, and their
+        # particle offset
+        nhalos_on_rank = [0, ] * size
+        offsets = [0, ] * size
+        for r, halos in enumerate(halos_on_rank):
+            offsets[r] = all_dm_begin[halos[0]]
+            nhalos_on_rank[r] = len(halos)
+
+        halo_ids = None
         dm_len = None
         grpid = None
         subgrpid = None
@@ -187,35 +224,96 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         dm_vel = None
         dm_masses = None
 
-    # Lets broadcast how many halos we've found and
-    # how many particles we sorted
-    nhalos = comm.bcast(nhalos, root=0)
-    npart_sorted = comm.bcast(npart_sorted, root=0)
+    else:
+        halos_on_rank = None
+        nhalos_on_rank = None
+        nparts_on_rank = None
+        all_halo_ids = None
+        all_dm_begin = None
+        all_dm_len = None
+        all_grpid = None
+        all_subgrpid = None
+        all_dm_pid = None
+        all_dm_ind = None
+        all_dm_pos = None
+        all_dm_vel = None
+        all_dm_masses = None
+        
+    # Broadcast what each rank should be expecting
+    nparts_on_rank = comm.bcast(nparts_on_rank, root=0)
+    nhalos_on_rank = comm.bcast(nhalos_on_rank, root=0)
+    
+    # Now we can finally distribute the halos and particles
+    if rank == 0:
+        
+        # Loop over ranks
+        for r in range(size):
 
-    # Create receive buffers
-    if rank != 0:
-        dm_begin = np.empty(nhalos, dtype=int)
-        dm_len = np.empty(nhalos, dtype=int)
-        grpid = np.empty(nhalos, dtype=int)
-        subgrpid = np.empty(nhalos, dtype=int)
-        dm_pid = np.empty(npart_sorted, dtype=int)
-        dm_ind = np.empty(npart_sorted, dtype=int)
-        dm_pos = np.empty((npart_sorted, 3), dtype=np.float64)
-        dm_vel = np.empty((npart_sorted, 3), dtype=np.float64)
-        dm_masses = np.empty(npart_sorted, dtype=np.float64)
+            # Get the data to send
+            rank_begin = all_dm_begin[halos_on_rank[r][0]]
+            rank_len = nparts_on_rank[r]
+            halo_slice = (halos_on_rank[r][0], halos_on_rank[r][1] + 1)
+            part_slice = (rank_begin, rank_begin + rank_len)
 
-    # Finish off by broadcasting
-    comm.Bcast(dm_begin, root=0)
-    comm.Bcast(dm_len, root=0)
-    comm.Bcast(grpid, root=0)
-    comm.Bcast(subgrpid, root=0)
-    comm.Bcast(dm_pid, root=0)
-    comm.Bcast(dm_ind, root=0)
-    comm.Bcast(dm_pos, root=0)
-    comm.Bcast(dm_vel, root=0)
-    comm.Bcast(dm_masses, root=0)
+            if r == rank:
 
-    return (dm_len, grpid, subgrpid, dm_pid, dm_ind, dm_begin, dm_pos, dm_vel,
+                # Get the master rank's halos
+                halo_ids = all_halo_ids[halo_slice[0]: halo_slice[1]]
+                dm_len = all_dm_len[halo_slice[0]: halo_slice[1]]
+                grpid = all_grpid[halo_slice[0]: halo_slice[1]]
+                subgrpid = all_subgrpid[halo_slice[0]: halo_slice[1]]
+                dm_pid = all_dm_pid[part_slice[0]: part_slice[1]]
+                dm_ind = all_dm_ind[part_slice[0]: part_slice[1]]
+                dm_pos = all_dm_pos[part_slice[0]: part_slice[1]]
+                dm_vel = all_dm_vel[part_slice[0]: part_slice[1]]
+                dm_masses = all_dm_masses[part_slice[0]: part_slice[1]]
+
+            else:
+
+                # Post sends
+                comm.Isend(all_halo_ids[halo_slice[0]: halo_slice[1]],
+                           dest=r, tag=0)
+                comm.Isend(all_dm_len[halo_slice[0]: halo_slice[1]],
+                           dest=r, tag=1)
+                comm.Isend(all_grpid[halo_slice[0]: halo_slice[1]],
+                           dest=r, tag=2)
+                comm.Isend(all_subgrpid[halo_slice[0]: halo_slice[1]],
+                           dest=r, tag=3)
+                comm.Isend(all_dm_pid[part_slice[0]: part_slice[1]],
+                           dest=r, tag=4)
+                comm.Isend(all_dm_ind[part_slice[0]: part_slice[1]],
+                           dest=r, tag=5)
+                comm.Isend(all_dm_pos[part_slice[0]: part_slice[1]],
+                           dest=r, tag=6)
+                comm.Isend(all_dm_vel[part_slice[0]: part_slice[1]],
+                           dest=r, tag=7)
+                comm.Isend(all_dm_masses[part_slice[0]: part_slice[1]],
+                           dest=r, tag=8)
+    
+    else:
+
+        # Create receive buffers
+        halo_ids = np.empty(nhalos_on_rank[rank], dtype=int)
+        dm_len = np.empty(nhalos_on_rank[rank], dtype=int)
+        grpid = np.empty(nhalos_on_rank[rank], dtype=int)
+        subgrpid = np.empty(nhalos_on_rank[rank], dtype=int)
+        dm_pid = np.empty(nparts_on_rank[rank], dtype=int)
+        dm_ind = np.empty(nparts_on_rank[rank], dtype=int)
+        dm_pos = np.empty((nparts_on_rank[rank], 3), dtype=np.float64)
+        dm_vel = np.empty((nparts_on_rank[rank], 3), dtype=np.float64)
+        dm_masses = np.empty(nparts_on_rank[rank], dtype=np.float64)
+
+        # Receive
+        comm.Recv(dm_len, source=0, tag=1)
+        comm.Recv(grpid, source=0, tag=2)
+        comm.Recv(subgrpid, source=0, tag=3)
+        comm.Recv(dm_pid, source=0, tag=4)
+        comm.Recv(dm_ind, source=0, tag=5)
+        comm.Recv(dm_pos, source=0, tag=6)
+        comm.Recv(dm_vel, source=0, tag=7)
+        comm.Recv(dm_masses, source=0, tag=8)
+
+    return (halo_ids, dm_len, grpid, subgrpid, dm_pid, dm_ind, dm_pos, dm_vel,
             dm_masses, part_ids, true_npart)
 
 
@@ -285,7 +383,7 @@ def main():
     meta.tictoc = tictoc
 
     # Get the particle data for all particle types in the current snapshot
-    (dm_len, grpid, subgrpid, dm_pid, dm_ind, dmbegin, dm_pos, dm_vel,
+    (halo_ids, dm_len, grpid, subgrpid, dm_pid, dm_ind, dm_pos, dm_vel,
      dm_masses, dm_snap_part_ids, true_npart) = get_data(tictoc, reg,
                                                          snap, meta,
                                                          inputs["data"])
@@ -296,7 +394,7 @@ def main():
     if rank == 0:
         message(rank, "Npart: %d ~ %d^3" % (true_npart,
                                             int(true_npart ** (1 / 3))))
-        message(rank, "Nhalo: %d" % len(dmbegin))
+        message(rank, "Nhalo: %d" % len(dm_len))
 
     # Define part type array
     dm_part_types = np.full_like(dm_pid, 1)
@@ -304,20 +402,10 @@ def main():
     # Initialise dictionary for mega halo objects
     results = {}
 
-    # Split up galaxies across nodes
-    if len(dmbegin) > meta.nranks:
-        rank_halobins = np.linspace(0, len(dmbegin), size + 1, dtype=int)
-    else:  # handle the case where there are less halos than ranks
-        rank_halobins = []
-        for halo in range(len(dmbegin) + 1):
-            rank_halobins.append(halo)
-        while len(rank_halobins) < size + 1:
-            rank_halobins.append(0)
-
     # Loop over galaxies and create mega objects
-    ihalo = rank_halobins[rank]
-    for b, l in zip(dmbegin[rank_halobins[rank]: rank_halobins[rank + 1]],
-                    dm_len[rank_halobins[rank]: rank_halobins[rank + 1]]):
+    b = 0
+    for ihalo, l in (halo_ids, dm_len):
+
         # Compute end
         e = b + l
 
@@ -332,7 +420,9 @@ def main():
                               dm_masses[b:e], 10, meta)
         results[ihalo].clean_halo()
         results[ihalo].memory = utils.get_size(results[ihalo])
-        ihalo += 1
+
+        # Set new begin
+        b = e
 
     # Collect results from all processes bit by bit
     tictoc.start_func_time("Collecting")
