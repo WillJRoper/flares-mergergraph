@@ -387,7 +387,7 @@ def main():
      dm_masses, dm_snap_part_ids, true_npart) = get_data(tictoc, reg,
                                                          snap, meta,
                                                          inputs["data"])
-
+    print(halo_ids)
     # Set npart
     meta.npart[1] = dm_snap_part_ids.size
 
