@@ -183,7 +183,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         # of particles
         halos_on_rank = {r: [] for r in range(size)}
         ihalo = 0
-        print(shared_npart)
         for r in range(size):
 
             # Keep track of allocated particles
@@ -405,7 +404,7 @@ def main():
 
     # Loop over galaxies and create mega objects
     b = 0
-    for ihalo, l in (halo_ids, dm_len):
+    for ihalo, l in zip(halo_ids, dm_len):
 
         # Compute end
         e = b + l
