@@ -213,7 +213,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         for r in halos_on_rank:
             nhalos_on_rank[r] = len(halos_on_rank[r])
 
-        print(nhalos_on_rank)
         halo_ids = None
         dm_len = None
         grpid = None
@@ -271,23 +270,23 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             else:
 
                 # Post sends
-                comm.Isend(all_halo_ids[halo_slice[0]: halo_slice[1]],
+                comm.Send(all_halo_ids[halo_slice[0]: halo_slice[1]],
                            dest=r, tag=0)
-                comm.Isend(all_dm_len[halo_slice[0]: halo_slice[1]],
+                comm.Send(all_dm_len[halo_slice[0]: halo_slice[1]],
                            dest=r, tag=1)
-                comm.Isend(all_grpid[halo_slice[0]: halo_slice[1]],
+                comm.Send(all_grpid[halo_slice[0]: halo_slice[1]],
                            dest=r, tag=2)
-                comm.Isend(all_subgrpid[halo_slice[0]: halo_slice[1]],
+                comm.Send(all_subgrpid[halo_slice[0]: halo_slice[1]],
                            dest=r, tag=3)
-                comm.Isend(all_dm_pid[part_slice[0]: part_slice[1]],
+                comm.Send(all_dm_pid[part_slice[0]: part_slice[1]],
                            dest=r, tag=4)
-                comm.Isend(all_dm_ind[part_slice[0]: part_slice[1]],
+                comm.Send(all_dm_ind[part_slice[0]: part_slice[1]],
                            dest=r, tag=5)
-                comm.Isend(all_dm_pos[part_slice[0]: part_slice[1]],
+                comm.Send(all_dm_pos[part_slice[0]: part_slice[1]],
                            dest=r, tag=6)
-                comm.Isend(all_dm_vel[part_slice[0]: part_slice[1]],
+                comm.Send(all_dm_vel[part_slice[0]: part_slice[1]],
                            dest=r, tag=7)
-                comm.Isend(all_dm_masses[part_slice[0]: part_slice[1]],
+                comm.Send(all_dm_masses[part_slice[0]: part_slice[1]],
                            dest=r, tag=8)
     
     else:
