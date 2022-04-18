@@ -195,7 +195,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 ihalo += 1
 
             # Allocate any leftovers
-            # NOTE: leads to the last rank having 
+            # NOTE: leads to the last rank having more work but
+            # these are small halos due to halo ordering
             while ihalo < all_dm_len.size:
                 halos_on_rank[r].append(ihalo)
                 ihalo += 1
@@ -203,6 +204,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         # Get how many particles each rank should expect
         nparts_on_rank = [0, ] * size
         for r, halos in enumerate(halos_on_rank):
+            print(r, halos)
             for ihalo in halos:
                 nparts_on_rank[r] += all_dm_len[ihalo]
 
