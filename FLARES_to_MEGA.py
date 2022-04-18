@@ -405,6 +405,7 @@ def main():
 
     # Loop over galaxies and create mega objects
     b = 0
+    halo_offset = halo_ids[0]
     for ihalo, l in zip(halo_ids, dm_len):
 
         # Compute end
@@ -415,7 +416,8 @@ def main():
 
         # Store this halo
         results[ihalo] = Halo(tictoc, dm_ind[b:e],
-                              (grpid[ihalo], subgrpid[ihalo]),
+                              (grpid[ihalo - halo_offset],
+                               subgrpid[ihalo - halo_offset]),
                               dm_pid[b:e], dm_pos[b:e, :], dm_vel[b:e, :],
                               dm_part_types[b:e],
                               dm_masses[b:e], 10, meta)
