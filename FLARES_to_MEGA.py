@@ -195,12 +195,12 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 nparts_to_send += all_dm_len[ihalo]
                 ihalo += 1
 
-            # Allocate any leftovers
-            # NOTE: leads to the last rank having more work but
-            # these are small halos due to halo ordering
-            while ihalo < all_dm_len.size:
-                halos_on_rank[r].append(ihalo)
-                ihalo += 1
+        # Allocate any leftovers
+        # NOTE: leads to the last rank having more work but
+        # these are small halos due to halo ordering
+        while ihalo < all_dm_len.size:
+            halos_on_rank[-1].append(ihalo)
+            ihalo += 1
 
         # Get how many particles each rank should expect
         nparts_on_rank = [0, ] * size
@@ -211,11 +211,10 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         # Get how many halos each rank should expect, and their
         # particle offset
         nhalos_on_rank = [0, ] * size
-        offsets = [0, ] * size
         for r in halos_on_rank:
-            offsets[r] = all_dm_begin[halos_on_rank[r][0]]
             nhalos_on_rank[r] = len(halos_on_rank[r])
 
+        print(nhalos_on_rank)
         halo_ids = None
         dm_len = None
         grpid = None
