@@ -132,7 +132,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         vals = length_dict.values()
         keys = np.array(list(keys), dtype=object)
         vals = np.array(list(vals), dtype=int)
-        sinds = np.argsort(vals)
+        sinds = np.argsort(vals)[::-1]
         keys = keys[sinds, :]
 
         # Define arrays and lists to hold sorted halos
@@ -304,6 +304,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         dm_masses = np.empty(nparts_on_rank[rank], dtype=np.float64)
 
         # Receive
+        comm.Recv(halo_ids, source=0, tag=0)
         comm.Recv(dm_len, source=0, tag=1)
         comm.Recv(grpid, source=0, tag=2)
         comm.Recv(subgrpid, source=0, tag=3)
