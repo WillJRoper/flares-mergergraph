@@ -189,7 +189,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             nparts_to_send = 0
 
             # Allocate this halo
-            while nparts_to_send <= shared_npart:
+            while nparts_to_send <= shared_npart and ihalo < all_dm_len.size:
                 halos_on_rank[r].append(ihalo)
                 nparts_to_send += all_dm_len[ihalo]
                 ihalo += 1
