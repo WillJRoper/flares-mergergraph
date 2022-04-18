@@ -183,6 +183,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         # of particles
         halos_on_rank = {r: [] for r in range(size)}
         ihalo = 0
+        print(shared_npart)
         for r in range(size):
 
             # Keep track of allocated particles
@@ -202,20 +203,18 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 ihalo += 1
 
         # Get how many particles each rank should expect
-        print(halos_on_rank)
         nparts_on_rank = [0, ] * size
-        for r, halos in enumerate(halos_on_rank):
-            print(r, halos)
-            for ihalo in halos:
+        for r in halos_on_rank:
+            for ihalo in halos_on_rank[r]:
                 nparts_on_rank[r] += all_dm_len[ihalo]
 
         # Get how many halos each rank should expect, and their
         # particle offset
         nhalos_on_rank = [0, ] * size
         offsets = [0, ] * size
-        for r, halos in enumerate(halos_on_rank):
-            offsets[r] = all_dm_begin[halos[0]]
-            nhalos_on_rank[r] = len(halos)
+        for r in halos_on_rank:
+            offsets[r] = all_dm_begin[halos_on_rank[r][0]]
+            nhalos_on_rank[r] = len(halos_on_rank[r])
 
         halo_ids = None
         dm_len = None
