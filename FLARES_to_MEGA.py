@@ -147,7 +147,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         all_dm_pos = []
         all_dm_vel = []
         all_dm_masses = []
-
+        print(keys)
         # Loop over keys storing their results
         for ihalo, key in enumerate(keys):
             # Get group and subgroup ID
@@ -229,7 +229,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             # Get the data to send
             rank_begin = all_dm_begin[halos_on_rank[r][0]]
             rank_len = nparts_on_rank[r]
-            halo_slice = (halos_on_rank[r][0], halos_on_rank[r][1] + 1)
+            halo_slice = (np.min(halos_on_rank[r]),
+                          np.max(halos_on_rank[r]) + 1)
             part_slice = (rank_begin, rank_begin + rank_len)
 
             # Get store data
@@ -239,8 +240,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             subgrpid[r] = all_subgrpid[halo_slice[0]: halo_slice[1]]
             dm_pid[r] = all_dm_pid[part_slice[0]: part_slice[1]]
             dm_ind[r] = all_dm_ind[part_slice[0]: part_slice[1]]
-            dm_pos[r] = all_dm_pos[part_slice[0]: part_slice[1]]
-            dm_vel[r] = all_dm_vel[part_slice[0]: part_slice[1]]
+            dm_pos[r] = all_dm_pos[part_slice[0]: part_slice[1], :]
+            dm_vel[r] = all_dm_vel[part_slice[0]: part_slice[1], :]
             dm_masses[r] = all_dm_masses[part_slice[0]: part_slice[1]]
 
     else:
