@@ -213,7 +213,40 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         for r in halos_on_rank:
             nhalos_on_rank[r] = len(halos_on_rank[r])
 
+        # Set up dictionaries for communicating data        
+        halo_ids = [None for r in range(size)]
+        dm_len = [None for r in range(size)]
+        grpid = [None for r in range(size)]
+        subgrpid = [None for r in range(size)]
+        dm_pid = [None for r in range(size)]
+        dm_ind = [None for r in range(size)]
+        dm_pos = [None for r in range(size)]
+        dm_vel = [None for r in range(size)]
+        dm_masses = [None for r in range(size)]
+
+        # Loop over ranks
+        for r in range(size):
+            # Get the data to send
+            rank_begin = all_dm_begin[halos_on_rank[r][0]]
+            rank_len = nparts_on_rank[r]
+            halo_slice = (halos_on_rank[r][0], halos_on_rank[r][1] + 1)
+            part_slice = (rank_begin, rank_begin + rank_len)
+
+            # Get store data
+            halo_ids[r] = all_halo_ids[halo_slice[0]: halo_slice[1]]
+            dm_len[r] = all_dm_len[halo_slice[0]: halo_slice[1]]
+            grpid[r] = all_grpid[halo_slice[0]: halo_slice[1]]
+            subgrpid[r] = all_subgrpid[halo_slice[0]: halo_slice[1]]
+            dm_pid[r] = all_dm_pid[part_slice[0]: part_slice[1]]
+            dm_ind[r] = all_dm_ind[part_slice[0]: part_slice[1]]
+            dm_pos[r] = all_dm_pos[part_slice[0]: part_slice[1]]
+            dm_vel[r] = all_dm_vel[part_slice[0]: part_slice[1]]
+            dm_masses[r] = all_dm_masses[part_slice[0]: part_slice[1]]
+
+    else:
+        nhalos = None
         halo_ids = None
+        dm_begin = None
         dm_len = None
         grpid = None
         subgrpid = None
@@ -223,98 +256,22 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         dm_vel = None
         dm_masses = None
 
-    else:
-        halos_on_rank = None
-        nhalos_on_rank = None
-        nparts_on_rank = None
-        all_halo_ids = None
-        all_dm_begin = None
-        all_dm_len = None
-        all_grpid = None
-        all_subgrpid = None
-        all_dm_pid = None
-        all_dm_ind = None
-        all_dm_pos = None
-        all_dm_vel = None
-        all_dm_masses = None
-        
-    # Broadcast what each rank should be expecting
-    nparts_on_rank = comm.bcast(nparts_on_rank, root=0)
-    nhalos_on_rank = comm.bcast(nhalos_on_rank, root=0)
-    
-    # Now we can finally distribute the halos and particles
-    if rank == 0:
-        
-        # Loop over ranks
-        for r in range(size):
+    # Broadcast the number of halos
+    nhalos = comm.bcast(nhalos, root=0)
 
-            # Get the data to send
-            rank_begin = all_dm_begin[halos_on_rank[r][0]]
-            rank_len = nparts_on_rank[r]
-            halo_slice = (halos_on_rank[r][0], halos_on_rank[r][1] + 1)
-            part_slice = (rank_begin, rank_begin + rank_len)
-
-            if r == rank:
-
-                # Get the master rank's halos
-                halo_ids = all_halo_ids[halo_slice[0]: halo_slice[1]]
-                dm_len = all_dm_len[halo_slice[0]: halo_slice[1]]
-                grpid = all_grpid[halo_slice[0]: halo_slice[1]]
-                subgrpid = all_subgrpid[halo_slice[0]: halo_slice[1]]
-                dm_pid = all_dm_pid[part_slice[0]: part_slice[1]]
-                dm_ind = all_dm_ind[part_slice[0]: part_slice[1]]
-                dm_pos = all_dm_pos[part_slice[0]: part_slice[1]]
-                dm_vel = all_dm_vel[part_slice[0]: part_slice[1]]
-                dm_masses = all_dm_masses[part_slice[0]: part_slice[1]]
-
-            else:
-
-                # Post sends
-                comm.Send(all_halo_ids[halo_slice[0]: halo_slice[1]],
-                           dest=r, tag=0)
-                comm.Send(all_dm_len[halo_slice[0]: halo_slice[1]],
-                           dest=r, tag=1)
-                comm.Send(all_grpid[halo_slice[0]: halo_slice[1]],
-                           dest=r, tag=2)
-                comm.Send(all_subgrpid[halo_slice[0]: halo_slice[1]],
-                           dest=r, tag=3)
-                comm.Send(all_dm_pid[part_slice[0]: part_slice[1]],
-                           dest=r, tag=4)
-                comm.Send(all_dm_ind[part_slice[0]: part_slice[1]],
-                           dest=r, tag=5)
-                comm.Send(all_dm_pos[part_slice[0]: part_slice[1]],
-                           dest=r, tag=6)
-                comm.Send(all_dm_vel[part_slice[0]: part_slice[1]],
-                           dest=r, tag=7)
-                comm.Send(all_dm_masses[part_slice[0]: part_slice[1]],
-                           dest=r, tag=8)
-    
-    else:
-
-        # Create receive buffers
-        halo_ids = np.empty(nhalos_on_rank[rank], dtype=int)
-        dm_len = np.empty(nhalos_on_rank[rank], dtype=int)
-        grpid = np.empty(nhalos_on_rank[rank], dtype=int)
-        subgrpid = np.empty(nhalos_on_rank[rank], dtype=int)
-        dm_pid = np.empty(nparts_on_rank[rank], dtype=int)
-        dm_ind = np.empty(nparts_on_rank[rank], dtype=int)
-        dm_pos = np.empty((nparts_on_rank[rank], 3), dtype=np.float64)
-        dm_vel = np.empty((nparts_on_rank[rank], 3), dtype=np.float64)
-        dm_masses = np.empty(nparts_on_rank[rank], dtype=np.float64)
-
-        # Receive
-        comm.Recv(halo_ids, source=0, tag=0)
-        comm.Recv(dm_len, source=0, tag=1)
-        comm.Recv(grpid, source=0, tag=2)
-        comm.Recv(subgrpid, source=0, tag=3)
-        comm.Recv(dm_pid, source=0, tag=4)
-        comm.Recv(dm_ind, source=0, tag=5)
-        comm.Recv(dm_pos, source=0, tag=6)
-        comm.Recv(dm_vel, source=0, tag=7)
-        comm.Recv(dm_masses, source=0, tag=8)
+    # Scatter the results of the decompostion
+    halo_ids = comm.scatter(halo_ids, root=0)
+    dm_len = comm.scatter(dm_len, root=0)
+    grpid = comm.scatter(grpid, root=0)
+    subgrpid = comm.scatter(subgrpid, root=0)
+    dm_pid = comm.scatter(dm_pid, root=0)
+    dm_ind = comm.scatter(dm_ind, root=0)
+    dm_pos = comm.scatter(dm_pos, root=0)
+    dm_vel = comm.scatter(dm_vel, root=0)
+    dm_masses = comm.scatter(dm_masses, root=0)
 
     return (halo_ids, dm_len, grpid, subgrpid, dm_pid, dm_ind, dm_pos, dm_vel,
-            dm_masses, part_ids, true_npart)
+            dm_masses, part_ids, true_npart, nhalos)
 
 
 def main():
@@ -384,9 +341,10 @@ def main():
 
     # Get the particle data for all particle types in the current snapshot
     (halo_ids, dm_len, grpid, subgrpid, dm_pid, dm_ind, dm_pos, dm_vel,
-     dm_masses, dm_snap_part_ids, true_npart) = get_data(tictoc, reg,
-                                                         snap, meta,
-                                                         inputs["data"])
+     dm_masses, dm_snap_part_ids, true_npart, nhalos) = get_data(tictoc, reg,
+                                                                 snap, meta,
+                                                                 inputs[
+                                                                     "data"])
     comm.Barrier()
     print(halo_ids)
     # Set npart
@@ -395,7 +353,7 @@ def main():
     if rank == 0:
         message(rank, "Npart: %d ~ %d^3" % (true_npart,
                                             int(true_npart ** (1 / 3))))
-        message(rank, "Nhalo: %d" % len(dm_len))
+        message(rank, "Nhalo: %d" % nhalos)
 
     # Define part type array
     dm_part_types = np.full_like(dm_pid, 1)
@@ -467,7 +425,6 @@ def main():
             subset = {}
             subset_size = 0
             while subset_size < 1024 and len(results) > 0:
-
                 # Get halo
                 key, halo = results.popitem()
 
