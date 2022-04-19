@@ -1,4 +1,5 @@
 import sys
+import os
 
 import core.param_utils as p_utils
 import core.utilities as utils
@@ -25,6 +26,21 @@ rank = comm.rank  # rank of this process
 status = MPI.Status()  # get MPI status object
 
 
+class HiddenPrints:
+    """ A class to supress printing from outside functions
+        (https://stackoverflow.com/questions/8391411/
+        how-to-block-calls-to-print)
+
+    """
+    def __enter__(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout.close()
+        sys.stdout = self._original_stdout
+
+
 @timer("Reading")
 def get_data(tictoc, reg, tag, meta, inputpath):
     # Define sim path
@@ -40,19 +56,20 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     null = 1073741824
 
     # Read in all the relevant data
-    true_part_ids = E.read_array("SNAP", sim_path, tag,
-                                 "PartType1/ParticleIDs", numThreads=8)
-    part_ids = E.read_array("PARTDATA", sim_path, tag,
-                            "PartType1/ParticleIDs", numThreads=8)
-    part_grp_ids = E.read_array("PARTDATA", sim_path, tag,
-                                "PartType1/GroupNumber", numThreads=8)
-    part_subgrp_ids = E.read_array("PARTDATA", sim_path, tag,
-                                   "PartType1/SubGroupNumber", numThreads=8)
-    part_pos = E.read_array("PARTDATA", sim_path, tag,
-                            "PartType1/Coordinates", numThreads=8, noH=True)
-    part_vel = E.read_array("PARTDATA", sim_path, tag,
-                            "PartType1/Velocity", numThreads=8, noH=True,
-                            physicalUnits=True)
+    with HiddenPrints():
+        true_part_ids = E.read_array("SNAP", sim_path, tag,
+                                     "PartType1/ParticleIDs", numThreads=8)
+        part_ids = E.read_array("PARTDATA", sim_path, tag,
+                                "PartType1/ParticleIDs", numThreads=8)
+        part_grp_ids = E.read_array("PARTDATA", sim_path, tag,
+                                    "PartType1/GroupNumber", numThreads=8)
+        part_subgrp_ids = E.read_array("PARTDATA", sim_path, tag,
+                                       "PartType1/SubGroupNumber", numThreads=8)
+        part_pos = E.read_array("PARTDATA", sim_path, tag,
+                                "PartType1/Coordinates", numThreads=8, noH=True)
+        part_vel = E.read_array("PARTDATA", sim_path, tag,
+                                "PartType1/Velocity", numThreads=8, noH=True,
+                                physicalUnits=True)
 
     # Get the number of particles we are dealing with
     npart = part_ids.size
