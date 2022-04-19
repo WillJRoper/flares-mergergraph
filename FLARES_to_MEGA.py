@@ -52,7 +52,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     part_dm_mass = hdf["Header"].attrs["MassTable"][1] * 10 ** 10 / meta.h
     hdf.close()
 
-    # Define the NULL value in GADGET files
+    # Define the NULL value in SUBFIND files
     null = 1073741824
 
     # Read in all the relevant data
@@ -243,23 +243,35 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
         # Loop over ranks
         for r in range(size):
-            # Get the data to send
-            rank_begin = all_dm_begin[halos_on_rank[r][0]]
-            rank_len = nparts_on_rank[r]
-            halo_slice = (np.min(halos_on_rank[r]),
-                          np.max(halos_on_rank[r]) + 1)
-            part_slice = (rank_begin, rank_begin + rank_len)
 
-            # Get store data
-            halo_ids[r] = all_halo_ids[halo_slice[0]: halo_slice[1]]
-            dm_len[r] = all_dm_len[halo_slice[0]: halo_slice[1]]
-            grpid[r] = all_grpid[halo_slice[0]: halo_slice[1]]
-            subgrpid[r] = all_subgrpid[halo_slice[0]: halo_slice[1]]
-            dm_pid[r] = all_dm_pid[part_slice[0]: part_slice[1]]
-            dm_ind[r] = all_dm_ind[part_slice[0]: part_slice[1]]
-            dm_pos[r] = all_dm_pos[part_slice[0]: part_slice[1], :]
-            dm_vel[r] = all_dm_vel[part_slice[0]: part_slice[1], :]
-            dm_masses[r] = all_dm_masses[part_slice[0]: part_slice[1]]
+            # Get the data to send
+            if len(halos_on_rank[r]) > 0:
+                rank_begin = all_dm_begin[np.min(halos_on_rank[r])]
+                rank_len = nparts_on_rank[r]
+                halo_slice = (np.min(halos_on_rank[r]),
+                              np.max(halos_on_rank[r]) + 1)
+                part_slice = (rank_begin, rank_begin + rank_len)
+
+                # Get store data
+                halo_ids[r] = all_halo_ids[halo_slice[0]: halo_slice[1]]
+                dm_len[r] = all_dm_len[halo_slice[0]: halo_slice[1]]
+                grpid[r] = all_grpid[halo_slice[0]: halo_slice[1]]
+                subgrpid[r] = all_subgrpid[halo_slice[0]: halo_slice[1]]
+                dm_pid[r] = all_dm_pid[part_slice[0]: part_slice[1]]
+                dm_ind[r] = all_dm_ind[part_slice[0]: part_slice[1]]
+                dm_pos[r] = all_dm_pos[part_slice[0]: part_slice[1], :]
+                dm_vel[r] = all_dm_vel[part_slice[0]: part_slice[1], :]
+                dm_masses[r] = all_dm_masses[part_slice[0]: part_slice[1]]
+            else:
+                halo_ids[r] = np.array([], dtype=int)
+                dm_len[r] = np.array([], dtype=int)
+                grpid[r] = np.array([], dtype=int)
+                subgrpid[r] = np.array([], dtype=int)
+                dm_pid[r] = np.array([], dtype=int)
+                dm_ind[r] = np.array([], dtype=int)
+                dm_pos[r] = np.array([], dtype=np.float64)
+                dm_vel[r] = np.array([], dtype=np.float64)
+                dm_masses[r] = np.array([], dtype=np.float64)
 
     else:
         nhalos = None
