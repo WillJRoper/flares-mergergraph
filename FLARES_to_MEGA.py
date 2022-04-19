@@ -147,7 +147,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         all_dm_pos = []
         all_dm_vel = []
         all_dm_masses = []
-        print(keys)
+
         # Loop over keys storing their results
         for ihalo, key in enumerate(keys):
             # Get group and subgroup ID
@@ -346,8 +346,7 @@ def main():
                                                                  snap, meta,
                                                                  inputs[
                                                                      "data"])
-    comm.Barrier()
-    print(halo_ids)
+
     # Set npart
     meta.npart[1] = dm_snap_part_ids.size
 
