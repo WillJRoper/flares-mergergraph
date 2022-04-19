@@ -64,7 +64,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         part_grp_ids = E.read_array("PARTDATA", sim_path, tag,
                                     "PartType1/GroupNumber", numThreads=8)
         part_subgrp_ids = E.read_array("PARTDATA", sim_path, tag,
-                                       "PartType1/SubGroupNumber", numThreads=8)
+                                       "/PartType1/SubGroupNumber", numThreads=8)
         part_pos = E.read_array("PARTDATA", sim_path, tag,
                                 "PartType1/Coordinates", numThreads=8, noH=True)
         part_vel = E.read_array("PARTDATA", sim_path, tag,
