@@ -1,18 +1,17 @@
 import sys
 import os
 
-import core.param_utils as p_utils
-import core.utilities as utils
+import mega.core.param_utils as p_utils
+import mega.core.utilities as utils
 import h5py
 import mpi4py
 import numpy as np
-from core.collect_result import collect_halos
-from core.halo import Halo
-from core.serial_io import write_data
-from core.talking_utils import message
-from core.talking_utils import say_hello
-from core.timing import TicToc
-from core.timing import timer
+from mega.core.collect_result import collect_halos
+from mega.halo_core.halo import Halo
+from mega.core.serial_io import write_data
+from mega.core.talking_utils import message, say_hello
+from mega.core.timing import TicToc
+from mega.core.timing import timer
 from mpi4py import MPI
 
 from eagle_IO import eagle_IO as E
@@ -343,19 +342,11 @@ def main():
     z = float(z_str[0] + '.' + z_str[1])
 
     # Set up object containing housekeeping metadata
-    meta = p_utils.Metadata(snaplist, snap_ind, cosmology,
-                            params["llcoeff"], params["sub_llcoeff"], inputs,
-                            None,
-                            inputs["haloSavePath"], params["ini_alpha_v"],
-                            params["min_alpha_v"], params["decrement"],
-                            flags["verbose"], flags["subs"],
-                            params["N_cells"], flags["profile"],
-                            inputs["profilingPath"], cosmology["h"],
-                            (simulation["comoving_DM_softening"],
-                             simulation["max_physical_DM_softening"]),
-                            dmo=True, periodic=0, boxsize=[3200, 3200, 3200],
-                            npart=[0, 10 ** 7, 0, 0, 0, 0], z=z,
-                            tot_mass=10 ** 13)
+    meta = p_utils.Metadata(snaplist, snap_ind, cosmology, inputs,
+                            flags, params, simulation,
+                            boxsize=[3200, 3200, 3200],
+                            npart=[0, 10 ** 7, 0, 0, 0, 0],
+                            z=z, tot_mass=10 ** 13)
 
     meta.rank = rank
     meta.nranks = size
