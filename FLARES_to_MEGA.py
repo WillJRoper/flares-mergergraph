@@ -384,31 +384,32 @@ def main():
 
     # Loop over galaxies and create mega objects
     b = 0
-    halo_offset = halo_ids[0]
-    for ihalo, l in zip(halo_ids, dm_len):
+    if len(halo_ids) > 0:
+        halo_offset = halo_ids[0]
+        for ihalo, l in zip(halo_ids, dm_len):
 
-        # Compute end
-        e = b + l
+            # Compute end
+            e = b + l
 
-        if len(dm_ind[b:e]) < 10:
+            if len(dm_ind[b:e]) < 10:
+                b = e
+                continue
+
+            # Dummy internal energy
+            int_nrg = np.zeros_like(dm_masses[b:e])
+
+            # Store this halo
+            results[ihalo] = Halo(tictoc, dm_ind[b:e],
+                                  (grpid[ihalo - halo_offset],
+                                   subgrpid[ihalo - halo_offset]),
+                                  dm_pid[b:e], dm_pos[b:e, :], dm_vel[b:e, :],
+                                  dm_part_types[b:e],
+                                  dm_masses[b:e], int_nrg, 10, meta)
+            results[ihalo].clean_halo()
+            results[ihalo].memory = utils.get_size(results[ihalo])
+
+            # Set new begin
             b = e
-            continue
-
-        # Dummy internal energy
-        int_nrg = np.zeros_like(dm_masses[b:e])
-
-        # Store this halo
-        results[ihalo] = Halo(tictoc, dm_ind[b:e],
-                              (grpid[ihalo - halo_offset],
-                               subgrpid[ihalo - halo_offset]),
-                              dm_pid[b:e], dm_pos[b:e, :], dm_vel[b:e, :],
-                              dm_part_types[b:e],
-                              dm_masses[b:e], int_nrg, 10, meta)
-        results[ihalo].clean_halo()
-        results[ihalo].memory = utils.get_size(results[ihalo])
-
-        # Set new begin
-        b = e
 
     # Collect results from all processes bit by bit
     tictoc.start_func_time("Collecting")
