@@ -31,6 +31,7 @@ class HiddenPrints:
         how-to-block-calls-to-print)
 
     """
+
     def __enter__(self):
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, 'w')
@@ -229,7 +230,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         for r in halos_on_rank:
             nhalos_on_rank[r] = len(halos_on_rank[r])
 
-        # Set up dictionaries for communicating data        
+        # Set up dictionaries for communicating data
         halo_ids = [None for r in range(size)]
         dm_len = [None for r in range(size)]
         grpid = [None for r in range(size)]
@@ -390,7 +391,11 @@ def main():
         e = b + l
 
         if len(dm_ind[b:e]) < 10:
+            b = e
             continue
+
+        # Dummy internal energy
+        int_nrg = np.zeros_like(dm_masses[b:e])
 
         # Store this halo
         results[ihalo] = Halo(tictoc, dm_ind[b:e],
@@ -398,7 +403,7 @@ def main():
                                subgrpid[ihalo - halo_offset]),
                               dm_pid[b:e], dm_pos[b:e, :], dm_vel[b:e, :],
                               dm_part_types[b:e],
-                              dm_masses[b:e], 10, meta)
+                              dm_masses[b:e], int_nrg, 10, meta)
         results[ihalo].clean_halo()
         results[ihalo].memory = utils.get_size(results[ihalo])
 
