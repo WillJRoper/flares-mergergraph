@@ -181,8 +181,12 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         all_halo_ids = np.zeros(nhalos, dtype=int)
         all_dm_pid = []
         all_dm_ind = []
-        all_dm_pos = []
-        all_dm_vel = []
+        all_dm_posx = []
+        all_dm_velx = []
+        all_dm_posy = []
+        all_dm_vely = []
+        all_dm_posz = []
+        all_dm_velz = []
         all_dm_masses = []
 
         # Loop over keys storing their results
@@ -199,19 +203,23 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             all_subgrpid[ihalo] = subgrp
             all_dm_pid.extend(dm_pid_dict[key])
             all_dm_ind.extend(dm_ind_dict[key])
-            all_dm_pos.extend(np.dstack((dm_posx_dict[key],
-                                         dm_posy_dict[key],
-                                         dm_posz_dict[key])[0]))
-            all_dm_vel.extend(np.dstack((dm_velx_dict[key],
-                                         dm_vely_dict[key],
-                                         dm_velz_dict[key])[0]))
+            all_dm_posx.extend(dm_posx_dict[key])
+            all_dm_velx.extend(dm_velx_dict[key])
+            all_dm_posy.extend(dm_posy_dict[key])
+            all_dm_vely.extend(dm_vely_dict[key])
+            all_dm_posz.extend(dm_posz_dict[key])
+            all_dm_velz.extend(dm_velz_dict[key])
             all_dm_masses.extend(dm_masses_dict[key])
 
         # Convert all keys to arrays
         all_dm_pid = np.array(all_dm_pid, dtype=int)
         all_dm_ind = np.array(all_dm_ind, dtype=int)
-        all_dm_pos = np.array(all_dm_pos, dtype=np.float64)
-        all_dm_vel = np.array(all_dm_vel, dtype=np.float64)
+        all_dm_posx = np.array(all_dm_posx, dtype=np.float64)
+        all_dm_velx = np.array(all_dm_velx, dtype=np.float64)
+        all_dm_posy = np.array(all_dm_posy, dtype=np.float64)
+        all_dm_vely = np.array(all_dm_vely, dtype=np.float64)
+        all_dm_posz = np.array(all_dm_posz, dtype=np.float64)
+        all_dm_velz = np.array(all_dm_velz, dtype=np.float64)
         all_dm_masses = np.array(all_dm_masses, dtype=np.float64)
 
         # Define the number of particles sorted
@@ -261,8 +269,12 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         subgrpid = [None for r in range(size)]
         dm_pid = [None for r in range(size)]
         dm_ind = [None for r in range(size)]
-        dm_pos = [None for r in range(size)]
-        dm_vel = [None for r in range(size)]
+        dm_posx = [None for r in range(size)]
+        dm_velx = [None for r in range(size)]
+        dm_posy = [None for r in range(size)]
+        dm_vely = [None for r in range(size)]
+        dm_posz = [None for r in range(size)]
+        dm_velz = [None for r in range(size)]
         dm_masses = [None for r in range(size)]
 
         # Loop over ranks
@@ -283,8 +295,12 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 subgrpid[r] = all_subgrpid[halo_slice[0]: halo_slice[1]]
                 dm_pid[r] = all_dm_pid[part_slice[0]: part_slice[1]]
                 dm_ind[r] = all_dm_ind[part_slice[0]: part_slice[1]]
-                dm_pos[r] = all_dm_pos[part_slice[0]: part_slice[1], :]
-                dm_vel[r] = all_dm_vel[part_slice[0]: part_slice[1], :]
+                dm_posx[r] = all_dm_posx[part_slice[0]: part_slice[1], :]
+                dm_velx[r] = all_dm_velx[part_slice[0]: part_slice[1], :]
+                dm_posy[r] = all_dm_posy[part_slice[0]: part_slice[1], :]
+                dm_vely[r] = all_dm_vely[part_slice[0]: part_slice[1], :]
+                dm_posz[r] = all_dm_posz[part_slice[0]: part_slice[1], :]
+                dm_velz[r] = all_dm_velz[part_slice[0]: part_slice[1], :]
                 dm_masses[r] = all_dm_masses[part_slice[0]: part_slice[1]]
             else:
                 halo_ids[r] = np.array([], dtype=int)
@@ -293,8 +309,12 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 subgrpid[r] = np.array([], dtype=int)
                 dm_pid[r] = np.array([], dtype=int)
                 dm_ind[r] = np.array([], dtype=int)
-                dm_pos[r] = np.array([], dtype=np.float64)
-                dm_vel[r] = np.array([], dtype=np.float64)
+                dm_posx[r] = np.array([], dtype=np.float64)
+                dm_velx[r] = np.array([], dtype=np.float64)
+                dm_posy[r] = np.array([], dtype=np.float64)
+                dm_vely[r] = np.array([], dtype=np.float64)
+                dm_posy[r] = np.array([], dtype=np.float64)
+                dm_vely[r] = np.array([], dtype=np.float64)
                 dm_masses[r] = np.array([], dtype=np.float64)
 
     else:
@@ -320,9 +340,17 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     subgrpid = comm.scatter(subgrpid, root=0)
     dm_pid = comm.scatter(dm_pid, root=0)
     dm_ind = comm.scatter(dm_ind, root=0)
-    dm_pos = comm.scatter(dm_pos, root=0)
-    dm_vel = comm.scatter(dm_vel, root=0)
+    dm_posx = comm.scatter(dm_posx, root=0)
+    dm_velx = comm.scatter(dm_velx, root=0)
+    dm_posy = comm.scatter(dm_posx, root=0)
+    dm_vely = comm.scatter(dm_velx, root=0)
+    dm_posz = comm.scatter(dm_posx, root=0)
+    dm_velz = comm.scatter(dm_velx, root=0)
     dm_masses = comm.scatter(dm_masses, root=0)
+
+    # Combine position and velocity coordinates
+    dm_pos = np.column_stack((dm_posx, dm_posy, dm_posz))
+    dm_vel = np.column_stack((dm_velx, dm_vely, dm_velz))
 
     return (halo_ids, dm_len, grpid, subgrpid, dm_pid, dm_ind, dm_pos, dm_vel,
             dm_masses, part_ids, true_npart, nhalos)
