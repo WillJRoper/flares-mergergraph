@@ -346,10 +346,10 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     dm_ind = comm.scatter(dm_ind, root=0)
     dm_posx = comm.scatter(dm_posx, root=0)
     dm_velx = comm.scatter(dm_velx, root=0)
-    dm_posy = comm.scatter(dm_posx, root=0)
-    dm_vely = comm.scatter(dm_velx, root=0)
-    dm_posz = comm.scatter(dm_posx, root=0)
-    dm_velz = comm.scatter(dm_velx, root=0)
+    dm_posy = comm.scatter(dm_posy, root=0)
+    dm_vely = comm.scatter(dm_vely, root=0)
+    dm_posz = comm.scatter(dm_posz, root=0)
+    dm_velz = comm.scatter(dm_velz, root=0)
     dm_masses = comm.scatter(dm_masses, root=0)
 
     # Combine position and velocity coordinates
