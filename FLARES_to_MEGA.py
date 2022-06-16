@@ -295,12 +295,12 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 subgrpid[r] = all_subgrpid[halo_slice[0]: halo_slice[1]]
                 dm_pid[r] = all_dm_pid[part_slice[0]: part_slice[1]]
                 dm_ind[r] = all_dm_ind[part_slice[0]: part_slice[1]]
-                dm_posx[r] = all_dm_posx[part_slice[0]: part_slice[1], :]
-                dm_velx[r] = all_dm_velx[part_slice[0]: part_slice[1], :]
-                dm_posy[r] = all_dm_posy[part_slice[0]: part_slice[1], :]
-                dm_vely[r] = all_dm_vely[part_slice[0]: part_slice[1], :]
-                dm_posz[r] = all_dm_posz[part_slice[0]: part_slice[1], :]
-                dm_velz[r] = all_dm_velz[part_slice[0]: part_slice[1], :]
+                dm_posx[r] = all_dm_posx[part_slice[0]: part_slice[1]]
+                dm_velx[r] = all_dm_velx[part_slice[0]: part_slice[1]]
+                dm_posy[r] = all_dm_posy[part_slice[0]: part_slice[1]]
+                dm_vely[r] = all_dm_vely[part_slice[0]: part_slice[1]]
+                dm_posz[r] = all_dm_posz[part_slice[0]: part_slice[1]]
+                dm_velz[r] = all_dm_velz[part_slice[0]: part_slice[1]]
                 dm_masses[r] = all_dm_masses[part_slice[0]: part_slice[1]]
             else:
                 halo_ids[r] = np.array([], dtype=int)
