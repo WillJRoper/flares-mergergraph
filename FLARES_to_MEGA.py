@@ -326,8 +326,12 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         subgrpid = None
         dm_pid = None
         dm_ind = None
-        dm_pos = None
-        dm_vel = None
+        dm_posx = None
+        dm_velx = None
+        dm_posy = None
+        dm_vely = None
+        dm_posz = None
+        dm_velz = None
         dm_masses = None
 
     # Broadcast the number of halos
