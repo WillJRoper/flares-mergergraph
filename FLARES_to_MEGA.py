@@ -353,8 +353,12 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     dm_masses = comm.scatter(dm_masses, root=0)
 
     # Combine position and velocity coordinates
-    dm_pos = np.column_stack((dm_posx, dm_posy, dm_posz))
-    dm_vel = np.column_stack((dm_velx, dm_vely, dm_velz))
+    if dm_posx.size > 0:
+        dm_pos = np.column_stack((dm_posx, dm_posy, dm_posz))
+        dm_vel = np.column_stack((dm_velx, dm_vely, dm_velz))
+    else:
+        dm_pos = np.array([[], [], []])
+        dm_vel = np.array([[], [], []])
 
     return (halo_ids, dm_len, grpid, subgrpid, dm_pid, dm_ind, dm_pos, dm_vel,
             dm_masses, part_ids, true_npart, nhalos)
