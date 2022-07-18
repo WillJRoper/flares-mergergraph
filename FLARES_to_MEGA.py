@@ -48,6 +48,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     sim_path = inputpath.replace("<reg>", reg)
     single_file = sim_path.replace("<snap>", tag)
     sim_path = "/".join([s for s in single_file.split("/") if "snap" not in s])
+    print(single_file)
+    print(sim_path)
 
     # Open single file and get DM particle mass
     hdf = h5py.File(single_file, "r")
@@ -123,29 +125,42 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
         # Read in all the relevant data
         with HiddenPrints():
-            true_part_ids = E.read_array("SNAP", sim_path, tag,
-                                         "PartType%d/ParticleIDs" % part_type,
-                                         numThreads=8)
-            part_ids = E.read_array("PARTDATA", sim_path, tag,
-                                    "PartType%d/ParticleIDs" % part_type,
-                                    numThreads=8)
-            part_grp_ids = E.read_array("PARTDATA", sim_path, tag,
-                                        "PartType%d/GroupNumber" % part_type,
+            try:
+                true_part_ids = E.read_array("SNAP", sim_path, tag,
+                                             "PartType%d/ParticleIDs" % part_type,
+                                             numThreads=8)
+                part_ids = E.read_array("PARTDATA", sim_path, tag,
+                                        "PartType%d/ParticleIDs" % part_type,
                                         numThreads=8)
-            part_subgrp_ids = E.read_array("PARTDATA", sim_path, tag,
-                                           "/PartType%d/SubGroupNumber" % part_type,
-                                           numThreads=8)
-            part_pos = E.read_array("PARTDATA", sim_path, tag,
-                                    "PartType%d/Coordinates" % part_type,
-                                    numThreads=8, noH=True)
-            part_vel = E.read_array("PARTDATA", sim_path, tag,
-                                    "PartType%d/Velocity" % part_type,
-                                    numThreads=8, noH=True,
-                                    physicalUnits=True)
-            part_mass = E.read_array("PARTDATA", sim_path, tag,
-                                     "PartType%d/Mass" % part_type,
-                                     numThreads=8, noH=True,
-                                     physicalUnits=True)
+                part_grp_ids = E.read_array("PARTDATA", sim_path, tag,
+                                            "PartType%d/GroupNumber" % part_type,
+                                            numThreads=8)
+                part_subgrp_ids = E.read_array("PARTDATA", sim_path, tag,
+                                               "/PartType%d/SubGroupNumber" % part_type,
+                                               numThreads=8)
+                part_pos = E.read_array("PARTDATA", sim_path, tag,
+                                        "PartType%d/Coordinates" % part_type,
+                                        numThreads=8, noH=True)
+                part_vel = E.read_array("PARTDATA", sim_path, tag,
+                                        "PartType%d/Velocity" % part_type,
+                                        numThreads=8, noH=True,
+                                        physicalUnits=True)
+                part_mass = E.read_array("PARTDATA", sim_path, tag,
+                                         "PartType%d/Mass" % part_type,
+                                         numThreads=8, noH=True,
+                                         physicalUnits=True)
+            except ValueError:
+                true_part_ids = np.array([])
+                part_ids = np.array([])
+                part_grp_ids = np.array([])
+                part_subgrp_ids = np.array([])
+                part_pos = np.array([])
+                part_vel = np.array([])
+                part_mass = np.array([])
+
+        # Skip particle types that are not present
+        if part_ids.size == 0:
+            continue
 
         # Get the number of particles we are dealing with
         npart = part_ids.size
