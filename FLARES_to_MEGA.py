@@ -43,9 +43,11 @@ class HiddenPrints:
 
 @timer("Reading")
 def get_data(tictoc, reg, tag, meta, inputpath):
+
     # Define sim path
     sim_path = inputpath.replace("<reg>", reg)
-    single_file = sim_path + "snapshot_" + tag + "/snap_" + tag + ".0.hdf5"
+    sim_path = sim_path.replace("<snap>", tag)
+    single_file = sim_path.replace("<snap>", tag)
 
     # Open single file and get DM particle mass
     hdf = h5py.File(single_file, "r")
