@@ -188,7 +188,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             vely_dict.setdefault(key, []).append(part_vel[ind, 1])
             posz_dict.setdefault(key, []).append(part_pos[ind, 2])
             velz_dict.setdefault(key, []).append(part_vel[ind, 2])
-            masses_dict.setdefault(key, []).append(part_mass)
+            masses_dict.setdefault(key, []).append(part_mass[ind])
             part_types_dict.setdefault(key, []).append(part_type)
 
     # Now need collect on master
