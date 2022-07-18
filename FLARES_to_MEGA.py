@@ -48,16 +48,14 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     sim_path = inputpath.replace("<reg>", reg)
     single_file = sim_path.replace("<snap>", tag)
     sim_path = "/".join([s for s in single_file.split("/") if "snap" not in s])
-    print(sim_path)
+
     # Open single file and get DM particle mass
     hdf = h5py.File(single_file, "r")
-    part_dm_mass = hdf["Header"].attrs["MassTable"][1] * 10 ** 10 / meta.h
+    part_mass = hdf["Header"].attrs["MassTable"][1] * 10 ** 10 / meta.h
     hdf.close()
 
     # Define the NULL value in SUBFIND files
     null = 1073741824
-
-    print(sim_path)
 
     # Read in all the relevant data
     with HiddenPrints():
@@ -68,9 +66,11 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         part_grp_ids = E.read_array("PARTDATA", sim_path, tag,
                                     "PartType1/GroupNumber", numThreads=8)
         part_subgrp_ids = E.read_array("PARTDATA", sim_path, tag,
-                                       "/PartType1/SubGroupNumber", numThreads=8)
+                                       "/PartType1/SubGroupNumber",
+                                       numThreads=8)
         part_pos = E.read_array("PARTDATA", sim_path, tag,
-                                "PartType1/Coordinates", numThreads=8, noH=True)
+                                "PartType1/Coordinates", numThreads=8,
+                                noH=True)
         part_vel = E.read_array("PARTDATA", sim_path, tag,
                                 "PartType1/Velocity", numThreads=8, noH=True,
                                 physicalUnits=True)
@@ -84,15 +84,16 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
     # Initialise dictionaries to store sorted particles
     length_dict = {}
-    dm_pid_dict = {}
-    dm_ind_dict = {}
-    dm_posx_dict = {}
-    dm_posy_dict = {}
-    dm_posz_dict = {}
-    dm_velx_dict = {}
-    dm_vely_dict = {}
-    dm_velz_dict = {}
-    dm_masses_dict = {}
+    pid_dict = {}
+    ind_dict = {}
+    posx_dict = {}
+    posy_dict = {}
+    posz_dict = {}
+    velx_dict = {}
+    vely_dict = {}
+    velz_dict = {}
+    masses_dict = {}
+    part_types_dict = {}
 
     # Loop over the particles on this rank
     for ind in range(rank_bins[rank], rank_bins[rank + 1]):
@@ -107,27 +108,87 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         # Add this particle to the halo
         length_dict.setdefault(key, 0)
         length_dict[key] += 1
-        dm_pid_dict.setdefault(key, []).append(part_ids[ind])
-        dm_ind_dict.setdefault(key, []).append(ind)
-        dm_posx_dict.setdefault(key, []).append(part_pos[ind, 0])
-        dm_velx_dict.setdefault(key, []).append(part_vel[ind, 0])
-        dm_posy_dict.setdefault(key, []).append(part_pos[ind, 1])
-        dm_vely_dict.setdefault(key, []).append(part_vel[ind, 1])
-        dm_posz_dict.setdefault(key, []).append(part_pos[ind, 2])
-        dm_velz_dict.setdefault(key, []).append(part_vel[ind, 2])
-        dm_masses_dict.setdefault(key, []).append(part_dm_mass)
+        pid_dict.setdefault(key, []).append(part_ids[ind])
+        ind_dict.setdefault(key, []).append(ind)
+        posx_dict.setdefault(key, []).append(part_pos[ind, 0])
+        velx_dict.setdefault(key, []).append(part_vel[ind, 0])
+        posy_dict.setdefault(key, []).append(part_pos[ind, 1])
+        vely_dict.setdefault(key, []).append(part_vel[ind, 1])
+        posz_dict.setdefault(key, []).append(part_pos[ind, 2])
+        velz_dict.setdefault(key, []).append(part_vel[ind, 2])
+        masses_dict.setdefault(key, []).append(part_mass)
+        part_types_dict.setdefault(key, []).append(1)
+
+    for part_type in [0, 4, 5]:
+
+        # Read in all the relevant data
+        with HiddenPrints():
+            true_part_ids = E.read_array("SNAP", sim_path, tag,
+                                         "PartType%d/ParticleIDs" % part_type,
+                                         numThreads=8)
+            part_ids = E.read_array("PARTDATA", sim_path, tag,
+                                    "PartType%d/ParticleIDs" % part_type,
+                                    numThreads=8)
+            part_grp_ids = E.read_array("PARTDATA", sim_path, tag,
+                                        "PartType%d/GroupNumber" % part_type,
+                                        numThreads=8)
+            part_subgrp_ids = E.read_array("PARTDATA", sim_path, tag,
+                                           "/PartType%d/SubGroupNumber" % part_type,
+                                           numThreads=8)
+            part_pos = E.read_array("PARTDATA", sim_path, tag,
+                                    "PartType%d/Coordinates" % part_type,
+                                    numThreads=8, noH=True)
+            part_vel = E.read_array("PARTDATA", sim_path, tag,
+                                    "PartType%d/Velocity" % part_type,
+                                    numThreads=8, noH=True,
+                                    physicalUnits=True)
+            part_mass = E.read_array("PARTDATA", sim_path, tag,
+                                     "PartType%d/Mass" % part_type,
+                                     numThreads=8, noH=True,
+                                     physicalUnits=True)
+
+        # Get the number of particles we are dealing with
+        npart = part_ids.size
+        true_npart = true_part_ids.size
+
+        # Let's bin the particles and split the work up
+        rank_bins = np.linspace(0, npart, size + 1, dtype=int)
+
+        # Loop over the particles on this rank
+        for ind in range(rank_bins[rank], rank_bins[rank + 1]):
+
+            # Is this particle in a subgroup?
+            if part_subgrp_ids[ind] == null:
+                continue
+
+            # Define this halo's key
+            key = (part_grp_ids[ind], part_subgrp_ids[ind])
+
+            # Add this particle to the halo
+            length_dict.setdefault(key, 0)
+            length_dict[key] += 1
+            pid_dict.setdefault(key, []).append(part_ids[ind])
+            ind_dict.setdefault(key, []).append(ind)
+            posx_dict.setdefault(key, []).append(part_pos[ind, 0])
+            velx_dict.setdefault(key, []).append(part_vel[ind, 0])
+            posy_dict.setdefault(key, []).append(part_pos[ind, 1])
+            vely_dict.setdefault(key, []).append(part_vel[ind, 1])
+            posz_dict.setdefault(key, []).append(part_pos[ind, 2])
+            velz_dict.setdefault(key, []).append(part_vel[ind, 2])
+            masses_dict.setdefault(key, []).append(part_mass)
+            part_types_dict.setdefault(key, []).append(part_type)
 
     # Now need collect on master
     all_length = comm.gather(length_dict, root=0)
-    all_dm_pid = comm.gather(dm_pid_dict, root=0)
-    all_dm_ind = comm.gather(dm_ind_dict, root=0)
-    all_dm_posx = comm.gather(dm_posx_dict, root=0)
-    all_dm_velx = comm.gather(dm_velx_dict, root=0)
-    all_dm_posy = comm.gather(dm_posy_dict, root=0)
-    all_dm_vely = comm.gather(dm_vely_dict, root=0)
-    all_dm_posz = comm.gather(dm_posz_dict, root=0)
-    all_dm_velz = comm.gather(dm_velz_dict, root=0)
-    all_dm_masses = comm.gather(dm_masses_dict, root=0)
+    all_pid = comm.gather(pid_dict, root=0)
+    all_ind = comm.gather(ind_dict, root=0)
+    all_posx = comm.gather(posx_dict, root=0)
+    all_velx = comm.gather(velx_dict, root=0)
+    all_posy = comm.gather(posy_dict, root=0)
+    all_vely = comm.gather(vely_dict, root=0)
+    all_posz = comm.gather(posz_dict, root=0)
+    all_velz = comm.gather(velz_dict, root=0)
+    all_masses = comm.gather(masses_dict, root=0)
     if rank == 0:
 
         # Loop over halos from other ranks
@@ -141,16 +202,16 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 length_dict.setdefault(key, 0)
                 length_dict[key] += all_length[r][key]
 
-                dm_pid_dict.setdefault(key, []).extend(all_dm_pid[r][key])
-                dm_ind_dict.setdefault(key, []).extend(all_dm_ind[r][key])
-                dm_posx_dict.setdefault(key, []).extend(all_dm_posx[r][key])
-                dm_velx_dict.setdefault(key, []).extend(all_dm_velx[r][key])
-                dm_posy_dict.setdefault(key, []).extend(all_dm_posy[r][key])
-                dm_vely_dict.setdefault(key, []).extend(all_dm_vely[r][key])
-                dm_posz_dict.setdefault(key, []).extend(all_dm_posz[r][key])
-                dm_velz_dict.setdefault(key, []).extend(all_dm_velz[r][key])
-                dm_masses_dict.setdefault(key,
-                                          []).extend(all_dm_masses[r][key])
+                pid_dict.setdefault(key, []).extend(all_pid[r][key])
+                ind_dict.setdefault(key, []).extend(all_ind[r][key])
+                posx_dict.setdefault(key, []).extend(all_posx[r][key])
+                velx_dict.setdefault(key, []).extend(all_velx[r][key])
+                posy_dict.setdefault(key, []).extend(all_posy[r][key])
+                vely_dict.setdefault(key, []).extend(all_vely[r][key])
+                posz_dict.setdefault(key, []).extend(all_posz[r][key])
+                velz_dict.setdefault(key, []).extend(all_velz[r][key])
+                masses_dict.setdefault(key,
+                                       []).extend(all_masses[r][key])
 
         # Loop over halos and clean any spurious (npart<10)
         ini_keys = list(length_dict.keys())
@@ -158,15 +219,15 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
             if length_dict[key] < 10:
                 del length_dict[key]
-                del dm_pid_dict[key]
-                del dm_ind_dict[key]
-                del dm_posx_dict[key]
-                del dm_velx_dict[key]
-                del dm_posy_dict[key]
-                del dm_vely_dict[key]
-                del dm_posz_dict[key]
-                del dm_velz_dict[key]
-                del dm_masses_dict[key]
+                del pid_dict[key]
+                del ind_dict[key]
+                del posx_dict[key]
+                del velx_dict[key]
+                del posy_dict[key]
+                del vely_dict[key]
+                del posz_dict[key]
+                del velz_dict[key]
+                del masses_dict[key]
 
         # Now we can sort our halos
         keys = length_dict.keys()
@@ -178,20 +239,20 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
         # Define arrays and lists to hold sorted halos
         nhalos = keys.shape[0]
-        all_dm_begin = np.zeros(nhalos, dtype=int)
-        all_dm_len = np.zeros(nhalos, dtype=int)
+        all_begin = np.zeros(nhalos, dtype=int)
+        all_len = np.zeros(nhalos, dtype=int)
         all_grpid = np.zeros(nhalos, dtype=int)
         all_subgrpid = np.zeros(nhalos, dtype=int)
         all_halo_ids = np.zeros(nhalos, dtype=int)
-        all_dm_pid = []
-        all_dm_ind = []
-        all_dm_posx = []
-        all_dm_velx = []
-        all_dm_posy = []
-        all_dm_vely = []
-        all_dm_posz = []
-        all_dm_velz = []
-        all_dm_masses = []
+        all_pid = []
+        all_ind = []
+        all_posx = []
+        all_velx = []
+        all_posy = []
+        all_vely = []
+        all_posz = []
+        all_velz = []
+        all_masses = []
 
         # Loop over keys storing their results
         for ihalo, key in enumerate(keys):
@@ -201,33 +262,33 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
             # Store data
             all_halo_ids[ihalo] = ihalo
-            all_dm_begin[ihalo] = len(all_dm_pid)
-            all_dm_len[ihalo] = length_dict[key]
+            all_begin[ihalo] = len(all_pid)
+            all_len[ihalo] = length_dict[key]
             all_grpid[ihalo] = grp
             all_subgrpid[ihalo] = subgrp
-            all_dm_pid.extend(dm_pid_dict[key])
-            all_dm_ind.extend(dm_ind_dict[key])
-            all_dm_posx.extend(dm_posx_dict[key])
-            all_dm_velx.extend(dm_velx_dict[key])
-            all_dm_posy.extend(dm_posy_dict[key])
-            all_dm_vely.extend(dm_vely_dict[key])
-            all_dm_posz.extend(dm_posz_dict[key])
-            all_dm_velz.extend(dm_velz_dict[key])
-            all_dm_masses.extend(dm_masses_dict[key])
+            all_pid.extend(pid_dict[key])
+            all_ind.extend(ind_dict[key])
+            all_posx.extend(posx_dict[key])
+            all_velx.extend(velx_dict[key])
+            all_posy.extend(posy_dict[key])
+            all_vely.extend(vely_dict[key])
+            all_posz.extend(posz_dict[key])
+            all_velz.extend(velz_dict[key])
+            all_masses.extend(masses_dict[key])
 
         # Convert all keys to arrays
-        all_dm_pid = np.array(all_dm_pid, dtype=int)
-        all_dm_ind = np.array(all_dm_ind, dtype=int)
-        all_dm_posx = np.array(all_dm_posx, dtype=np.float64)
-        all_dm_velx = np.array(all_dm_velx, dtype=np.float64)
-        all_dm_posy = np.array(all_dm_posy, dtype=np.float64)
-        all_dm_vely = np.array(all_dm_vely, dtype=np.float64)
-        all_dm_posz = np.array(all_dm_posz, dtype=np.float64)
-        all_dm_velz = np.array(all_dm_velz, dtype=np.float64)
-        all_dm_masses = np.array(all_dm_masses, dtype=np.float64)
+        all_pid = np.array(all_pid, dtype=int)
+        all_ind = np.array(all_ind, dtype=int)
+        all_posx = np.array(all_posx, dtype=np.float64)
+        all_velx = np.array(all_velx, dtype=np.float64)
+        all_posy = np.array(all_posy, dtype=np.float64)
+        all_vely = np.array(all_vely, dtype=np.float64)
+        all_posz = np.array(all_posz, dtype=np.float64)
+        all_velz = np.array(all_velz, dtype=np.float64)
+        all_masses = np.array(all_masses, dtype=np.float64)
 
         # Define the number of particles sorted
-        npart_sorted = len(all_dm_pid)
+        npart_sorted = len(all_pid)
 
         # Lets bin the halos onto ranks
         shared_npart = npart_sorted / size
@@ -242,15 +303,15 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             nparts_to_send = 0
 
             # Allocate this halo
-            while nparts_to_send <= shared_npart and ihalo < all_dm_len.size:
+            while nparts_to_send <= shared_npart and ihalo < all_len.size:
                 halos_on_rank[r].append(ihalo)
-                nparts_to_send += all_dm_len[ihalo]
+                nparts_to_send += all_len[ihalo]
                 ihalo += 1
 
         # Allocate any leftovers
         # NOTE: leads to the last rank having more work but
         # these are small halos due to halo ordering
-        while ihalo < all_dm_len.size:
+        while ihalo < all_len.size:
             halos_on_rank[-1].append(ihalo)
             ihalo += 1
 
@@ -258,7 +319,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         nparts_on_rank = [0, ] * size
         for r in halos_on_rank:
             for ihalo in halos_on_rank[r]:
-                nparts_on_rank[r] += all_dm_len[ihalo]
+                nparts_on_rank[r] += all_len[ihalo]
 
         # Get how many halos each rank should expect, and their
         # particle offset
@@ -268,25 +329,25 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
         # Set up dictionaries for communicating data
         halo_ids = [None for r in range(size)]
-        dm_len = [None for r in range(size)]
+        length = [None for r in range(size)]
         grpid = [None for r in range(size)]
         subgrpid = [None for r in range(size)]
-        dm_pid = [None for r in range(size)]
-        dm_ind = [None for r in range(size)]
-        dm_posx = [None for r in range(size)]
-        dm_velx = [None for r in range(size)]
-        dm_posy = [None for r in range(size)]
-        dm_vely = [None for r in range(size)]
-        dm_posz = [None for r in range(size)]
-        dm_velz = [None for r in range(size)]
-        dm_masses = [None for r in range(size)]
+        pid = [None for r in range(size)]
+        ind = [None for r in range(size)]
+        posx = [None for r in range(size)]
+        velx = [None for r in range(size)]
+        posy = [None for r in range(size)]
+        vely = [None for r in range(size)]
+        posz = [None for r in range(size)]
+        velz = [None for r in range(size)]
+        masses = [None for r in range(size)]
 
         # Loop over ranks
         for r in range(size):
 
             # Get the data to send
             if len(halos_on_rank[r]) > 0:
-                rank_begin = all_dm_begin[np.min(halos_on_rank[r])]
+                rank_begin = all_begin[np.min(halos_on_rank[r])]
                 rank_len = nparts_on_rank[r]
                 halo_slice = (np.min(halos_on_rank[r]),
                               np.max(halos_on_rank[r]) + 1)
@@ -294,78 +355,78 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
                 # Get store data
                 halo_ids[r] = all_halo_ids[halo_slice[0]: halo_slice[1]]
-                dm_len[r] = all_dm_len[halo_slice[0]: halo_slice[1]]
+                length[r] = all_len[halo_slice[0]: halo_slice[1]]
                 grpid[r] = all_grpid[halo_slice[0]: halo_slice[1]]
                 subgrpid[r] = all_subgrpid[halo_slice[0]: halo_slice[1]]
-                dm_pid[r] = all_dm_pid[part_slice[0]: part_slice[1]]
-                dm_ind[r] = all_dm_ind[part_slice[0]: part_slice[1]]
-                dm_posx[r] = all_dm_posx[part_slice[0]: part_slice[1]]
-                dm_velx[r] = all_dm_velx[part_slice[0]: part_slice[1]]
-                dm_posy[r] = all_dm_posy[part_slice[0]: part_slice[1]]
-                dm_vely[r] = all_dm_vely[part_slice[0]: part_slice[1]]
-                dm_posz[r] = all_dm_posz[part_slice[0]: part_slice[1]]
-                dm_velz[r] = all_dm_velz[part_slice[0]: part_slice[1]]
-                dm_masses[r] = all_dm_masses[part_slice[0]: part_slice[1]]
+                pid[r] = all_pid[part_slice[0]: part_slice[1]]
+                ind[r] = all_ind[part_slice[0]: part_slice[1]]
+                posx[r] = all_posx[part_slice[0]: part_slice[1]]
+                velx[r] = all_velx[part_slice[0]: part_slice[1]]
+                posy[r] = all_posy[part_slice[0]: part_slice[1]]
+                vely[r] = all_vely[part_slice[0]: part_slice[1]]
+                posz[r] = all_posz[part_slice[0]: part_slice[1]]
+                velz[r] = all_velz[part_slice[0]: part_slice[1]]
+                masses[r] = all_masses[part_slice[0]: part_slice[1]]
             else:
                 halo_ids[r] = np.array([], dtype=int)
-                dm_len[r] = np.array([], dtype=int)
+                length[r] = np.array([], dtype=int)
                 grpid[r] = np.array([], dtype=int)
                 subgrpid[r] = np.array([], dtype=int)
-                dm_pid[r] = np.array([], dtype=int)
-                dm_ind[r] = np.array([], dtype=int)
-                dm_posx[r] = np.array([], dtype=np.float64)
-                dm_velx[r] = np.array([], dtype=np.float64)
-                dm_posy[r] = np.array([], dtype=np.float64)
-                dm_vely[r] = np.array([], dtype=np.float64)
-                dm_posy[r] = np.array([], dtype=np.float64)
-                dm_vely[r] = np.array([], dtype=np.float64)
-                dm_masses[r] = np.array([], dtype=np.float64)
+                pid[r] = np.array([], dtype=int)
+                ind[r] = np.array([], dtype=int)
+                posx[r] = np.array([], dtype=np.float64)
+                velx[r] = np.array([], dtype=np.float64)
+                posy[r] = np.array([], dtype=np.float64)
+                vely[r] = np.array([], dtype=np.float64)
+                posy[r] = np.array([], dtype=np.float64)
+                vely[r] = np.array([], dtype=np.float64)
+                masses[r] = np.array([], dtype=np.float64)
 
     else:
         nhalos = None
         halo_ids = None
-        dm_begin = None
-        dm_len = None
+        begin = None
+        length = None
         grpid = None
         subgrpid = None
-        dm_pid = None
-        dm_ind = None
-        dm_posx = None
-        dm_velx = None
-        dm_posy = None
-        dm_vely = None
-        dm_posz = None
-        dm_velz = None
-        dm_masses = None
+        pid = None
+        ind = None
+        posx = None
+        velx = None
+        posy = None
+        vely = None
+        posz = None
+        velz = None
+        masses = None
 
     # Broadcast the number of halos
     nhalos = comm.bcast(nhalos, root=0)
 
     # Scatter the results of the decompostion
     halo_ids = comm.scatter(halo_ids, root=0)
-    dm_len = comm.scatter(dm_len, root=0)
+    length = comm.scatter(length, root=0)
     grpid = comm.scatter(grpid, root=0)
     subgrpid = comm.scatter(subgrpid, root=0)
-    dm_pid = comm.scatter(dm_pid, root=0)
-    dm_ind = comm.scatter(dm_ind, root=0)
-    dm_posx = comm.scatter(dm_posx, root=0)
-    dm_velx = comm.scatter(dm_velx, root=0)
-    dm_posy = comm.scatter(dm_posy, root=0)
-    dm_vely = comm.scatter(dm_vely, root=0)
-    dm_posz = comm.scatter(dm_posz, root=0)
-    dm_velz = comm.scatter(dm_velz, root=0)
-    dm_masses = comm.scatter(dm_masses, root=0)
+    pid = comm.scatter(pid, root=0)
+    ind = comm.scatter(ind, root=0)
+    posx = comm.scatter(posx, root=0)
+    velx = comm.scatter(velx, root=0)
+    posy = comm.scatter(posy, root=0)
+    vely = comm.scatter(vely, root=0)
+    posz = comm.scatter(posz, root=0)
+    velz = comm.scatter(velz, root=0)
+    masses = comm.scatter(masses, root=0)
 
     # Combine position and velocity coordinates
-    if dm_posx.size > 0:
-        dm_pos = np.column_stack((dm_posx, dm_posy, dm_posz))
-        dm_vel = np.column_stack((dm_velx, dm_vely, dm_velz))
+    if posx.size > 0:
+        pos = np.column_stack((posx, posy, posz))
+        vel = np.column_stack((velx, vely, velz))
     else:
-        dm_pos = np.array([[], [], []])
-        dm_vel = np.array([[], [], []])
+        pos = np.array([[], [], []])
+        vel = np.array([[], [], []])
 
-    return (halo_ids, dm_len, grpid, subgrpid, dm_pid, dm_ind, dm_pos, dm_vel,
-            dm_masses, part_ids, true_npart, nhalos)
+    return (halo_ids, len, grpid, subgrpid, pid, ind, pos, vel,
+            masses, part_ids, true_npart, nhalos)
 
 
 def main():
@@ -436,14 +497,11 @@ def main():
     meta.tictoc = tictoc
 
     # Get the particle data for all particle types in the current snapshot
-    (halo_ids, dm_len, grpid, subgrpid, dm_pid, dm_ind, dm_pos, dm_vel,
-     dm_masses, dm_snap_part_ids, true_npart, nhalos) = get_data(tictoc, reg,
-                                                                 snap, meta,
-                                                                 inputs[
-                                                                     "data"])
-
-    # Set npart
-    meta.npart[1] = dm_snap_part_ids.size
+    (halo_ids, length, grpid, subgrpid, pid, ind, pos, vel,
+     masses, snap_part_ids, true_npart, nhalos) = get_data(tictoc, reg,
+                                                           snap, meta,
+                                                           inputs[
+                                                               "data"])
 
     if rank == 0:
         message(rank, "Npart: %d ~ %d^3" % (true_npart,
@@ -451,7 +509,7 @@ def main():
         message(rank, "Nhalo: %d" % nhalos)
 
     # Define part type array
-    dm_part_types = np.full_like(dm_pid, 1)
+    part_types = np.full_like(pid, 1)
 
     # Initialise dictionary for mega halo objects
     results = {}
@@ -460,25 +518,25 @@ def main():
     b = 0
     if len(halo_ids) > 0:
         halo_offset = halo_ids[0]
-        for ihalo, l in zip(halo_ids, dm_len):
+        for ihalo, l in zip(halo_ids, length):
 
             # Compute end
             e = b + l
 
-            if len(dm_ind[b:e]) < 10:
+            if len(ind[b:e]) < 10:
                 b = e
                 continue
 
             # Dummy internal energy
-            int_nrg = np.zeros_like(dm_masses[b:e])
+            int_nrg = np.zeros_like(masses[b:e])
 
             # Store this halo
-            results[ihalo] = Halo(tictoc, dm_ind[b:e],
+            results[ihalo] = Halo(tictoc, ind[b:e],
                                   (grpid[ihalo - halo_offset],
                                    subgrpid[ihalo - halo_offset]),
-                                  dm_pid[b:e], dm_pos[b:e, :], dm_vel[b:e, :],
-                                  dm_part_types[b:e],
-                                  dm_masses[b:e], int_nrg, 10, meta)
+                                  pid[b:e], pos[b:e, :], vel[b:e, :],
+                                  part_types[b:e],
+                                  masses[b:e], int_nrg, 10, meta)
             results[ihalo].clean_halo()
             results[ihalo].memory = utils.get_size(results[ihalo])
 
@@ -563,7 +621,7 @@ def main():
         # Write out file
         write_data(tictoc, meta, newPhaseID, newPhaseSubID,
                    results_dict=results_dict, sub_results_dict={},
-                   sim_pids=dm_snap_part_ids, basename_mod=reg,
+                   sim_pids=snap_part_ids, basename_mod=reg,
                    extra_data=extra_data)
 
         if meta.verbose:
