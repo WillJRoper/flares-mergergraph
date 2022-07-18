@@ -57,6 +57,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     # Define the NULL value in SUBFIND files
     null = 1073741824
 
+    print(sim_path)
+
     # Read in all the relevant data
     with HiddenPrints():
         true_part_ids = E.read_array("SNAP", sim_path, tag,
