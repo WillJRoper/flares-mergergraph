@@ -409,15 +409,13 @@ def main():
     # Open single file and get DM particle mass
     hdf = h5py.File(single_file, "r")
     boxsize = hdf["Header"].attrs["BoxSize"] / 0.6777
-    print(boxsize)
-    print(hdf["Header"].attrs.keys())
-    nparts = hdf["Header"].attrs["nPart_Total"]
+    nparts = hdf["Header"].attrs["NumPart_Total"]
     hdf.close()
 
     # Set up object containing housekeeping metadata
     meta = p_utils.Metadata(snaplist, snap_ind, cosmology, inputs,
                             flags, params, simulation,
-                            boxsize=[3200, 3200, 3200],
+                            boxsize=[boxsize, boxsize, boxsize],
                             npart=nparts,
                             z=z, tot_mass=10 ** 13)
 
