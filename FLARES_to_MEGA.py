@@ -202,6 +202,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     all_posz = comm.gather(posz_dict, root=0)
     all_velz = comm.gather(velz_dict, root=0)
     all_masses = comm.gather(masses_dict, root=0)
+    all_part_types = comm.gather(part_types_dict, root=0)
     if rank == 0:
 
         # Loop over halos from other ranks
@@ -225,6 +226,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 velz_dict.setdefault(key, []).extend(all_velz[r][key])
                 masses_dict.setdefault(key,
                                        []).extend(all_masses[r][key])
+                part_types_dict.setdefault(key,
+                                           []).extend(all_part_types[r][key])
 
         # Loop over halos and clean any spurious (npart<10)
         ini_keys = list(length_dict.keys())
@@ -241,6 +244,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 del posz_dict[key]
                 del velz_dict[key]
                 del masses_dict[key]
+                del part_types_dict[key]
 
         # Now we can sort our halos
         keys = length_dict.keys()
@@ -266,6 +270,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         all_posz = []
         all_velz = []
         all_masses = []
+        all_part_types = []
 
         # Loop over keys storing their results
         for ihalo, key in enumerate(keys):
@@ -288,6 +293,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             all_posz.extend(posz_dict[key])
             all_velz.extend(velz_dict[key])
             all_masses.extend(masses_dict[key])
+            all_part_types.extend(part_types_dict[key])
 
         # Convert all keys to arrays
         all_pid = np.array(all_pid, dtype=int)
@@ -299,6 +305,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         all_posz = np.array(all_posz, dtype=np.float64)
         all_velz = np.array(all_velz, dtype=np.float64)
         all_masses = np.array(all_masses, dtype=np.float64)
+        all_part_types = np.array(all_part_types, dtype=int)
 
         # Define the number of particles sorted
         npart_sorted = len(all_pid)
@@ -354,6 +361,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         posz = [None for r in range(size)]
         velz = [None for r in range(size)]
         masses = [None for r in range(size)]
+        types = [None for r in range(size)]
 
         # Loop over ranks
         for r in range(size):
@@ -380,6 +388,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 posz[r] = all_posz[part_slice[0]: part_slice[1]]
                 velz[r] = all_velz[part_slice[0]: part_slice[1]]
                 masses[r] = all_masses[part_slice[0]: part_slice[1]]
+                types[r] = all_part_types[part_slice[0]: part_slice[1]]
             else:
                 halo_ids[r] = np.array([], dtype=int)
                 length[r] = np.array([], dtype=int)
@@ -394,6 +403,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 posy[r] = np.array([], dtype=np.float64)
                 vely[r] = np.array([], dtype=np.float64)
                 masses[r] = np.array([], dtype=np.float64)
+                types[r] = np.array([], dtype=np.float64)
 
     else:
         nhalos = None
@@ -411,6 +421,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         posz = None
         velz = None
         masses = None
+        types = None
 
     # Broadcast the number of halos
     nhalos = comm.bcast(nhalos, root=0)
@@ -429,6 +440,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     posz = comm.scatter(posz, root=0)
     velz = comm.scatter(velz, root=0)
     masses = comm.scatter(masses, root=0)
+    types = comm.scatter(types, root=0)
 
     # Combine position and velocity coordinates
     if posx.size > 0:
@@ -439,7 +451,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         vel = np.array([[], [], []])
 
     return (halo_ids, length, grpid, subgrpid, pid, ind, pos, vel,
-            masses, part_ids, true_npart, nhalos)
+            masses, types, part_ids, true_npart, nhalos)
 
 
 def main():
@@ -511,18 +523,17 @@ def main():
 
     # Get the particle data for all particle types in the current snapshot
     (halo_ids, length, grpid, subgrpid, pid, ind, pos, vel,
-     masses, snap_part_ids, true_npart, nhalos) = get_data(tictoc, reg,
-                                                           snap, meta,
-                                                           inputs[
-                                                               "data"])
+     masses, part_types, snap_part_ids, true_npart, nhalos) = get_data(tictoc,
+                                                                       reg,
+                                                                       snap,
+                                                                       meta,
+                                                                       inputs[
+                                                                           "data"])
 
     if rank == 0:
         message(rank, "Npart: %d ~ %d^3" % (true_npart,
                                             int(true_npart ** (1 / 3))))
         message(rank, "Nhalo: %d" % nhalos)
-
-    # Define part type array
-    part_types = np.full_like(pid, 1)
 
     # Initialise dictionary for mega halo objects
     results = {}
