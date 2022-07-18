@@ -46,9 +46,9 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
     # Define sim path
     sim_path = inputpath.replace("<reg>", reg)
-    sim_path = sim_path.replace("<snap>", tag)
     single_file = sim_path.replace("<snap>", tag)
-
+    sim_path = "/".join([s for s in single_file.split("/") if "snap" not in s])
+    print(sim_path)
     # Open single file and get DM particle mass
     hdf = h5py.File(single_file, "r")
     part_dm_mass = hdf["Header"].attrs["MassTable"][1] * 10 ** 10 / meta.h
