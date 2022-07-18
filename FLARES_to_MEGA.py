@@ -417,7 +417,7 @@ def main():
                             flags, params, simulation,
                             boxsize=[boxsize, boxsize, boxsize],
                             npart=nparts,
-                            z=z, tot_mass=10 ** 13)
+                            z=z)
 
     meta.rank = rank
     meta.nranks = size
