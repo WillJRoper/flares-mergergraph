@@ -404,7 +404,7 @@ def main():
 
     # Define path to a single snapshot file for metadata
     sim_path = inputs["data"].replace("<reg>", reg)
-    single_file = sim_path + "snapshot_" + snap + "/snap_" + snap + ".0.hdf5"
+    single_file = sim_path.replace("<snap>", snap)
 
     # Open single file and get DM particle mass
     hdf = h5py.File(single_file, "r")
