@@ -402,23 +402,11 @@ def main():
     z_str = snap.split('z')[1].split('p')
     z = float(z_str[0] + '.' + z_str[1])
 
-    # Define path to a single snapshot file for metadata
-    sim_path = inputs["data"].replace("<reg>", reg)
-    single_file = sim_path + "snapshot_" + snap + "/snap_" + snap + ".0.hdf5"
-
-    # Open single file and get DM particle mass
-    hdf = h5py.File(single_file, "r")
-    boxsize = hdf["Header"].attrs["BoxSize"] / 0.6777
-    print(boxsize)
-    print(hdf["Header"].attrs.keys())
-    nparts = hdf["Header"].attrs["nPart_Total"]
-    hdf.close()
-
     # Set up object containing housekeeping metadata
     meta = p_utils.Metadata(snaplist, snap_ind, cosmology, inputs,
                             flags, params, simulation,
                             boxsize=[3200, 3200, 3200],
-                            npart=nparts,
+                            npart=[0, 10 ** 7, 0, 0, 0, 0],
                             z=z, tot_mass=10 ** 13)
 
     meta.rank = rank
