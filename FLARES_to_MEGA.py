@@ -440,7 +440,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         pos = np.array([[], [], []])
         vel = np.array([[], [], []])
 
-    return (halo_ids, len, grpid, subgrpid, pid, ind, pos, vel,
+    return (halo_ids, length, grpid, subgrpid, pid, ind, pos, vel,
             masses, part_ids, true_npart, nhalos)
 
 
