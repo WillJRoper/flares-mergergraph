@@ -147,7 +147,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                                          "PartType%d/Mass" % part_type,
                                          numThreads=8, noH=True,
                                          physicalUnits=True)
-            except ValueError:
+            except (ValueError, KeyError):
                 true_part_ids = np.array([])
                 part_ids = np.array([])
                 part_grp_ids = np.array([])
@@ -531,8 +531,6 @@ def main():
                                                                            "data"])
 
     if rank == 0:
-        message(rank, "Npart: %d ~ %d^3" % (true_npart,
-                                            int(true_npart ** (1 / 3))))
         message(rank, "Nhalo: %d" % nhalos)
 
     # Initialise dictionary for mega halo objects
