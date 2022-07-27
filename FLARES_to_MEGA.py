@@ -191,24 +191,98 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             masses_dict.setdefault(key, []).append(part_mass[ind])
             part_types_dict.setdefault(key, []).append(part_type)
 
-    # Now need collect on master
-    all_length = comm.gather(length_dict, root=0)
-    all_pid = comm.gather(pid_dict, root=0)
-    all_ind = comm.gather(ind_dict, root=0)
-    all_posx = comm.gather(posx_dict, root=0)
-    all_velx = comm.gather(velx_dict, root=0)
-    all_posy = comm.gather(posy_dict, root=0)
-    all_vely = comm.gather(vely_dict, root=0)
-    all_posz = comm.gather(posz_dict, root=0)
-    all_velz = comm.gather(velz_dict, root=0)
-    all_masses = comm.gather(masses_dict, root=0)
-    all_part_types = comm.gather(part_types_dict, root=0)
+    if rank == 0:
+        # Set up lists for master
+        all_length = []
+        all_pid = []
+        all_ind = []
+        all_posx = []
+        all_velx = []
+        all_posy = []
+        all_vely = []
+        all_posz = []
+        all_velz = []
+        all_masses = []
+        all_part_types = []
+
+    # Communicate 1000 galaxies at a time
+    ngal = np.inf
+    while ngal > 0:
+
+        proxy_length_dict = {}
+        proxy_pid_dict = {}
+        proxy_ind_dict = {}
+        proxy_posx_dict = {}
+        proxy_velx_dict = {}
+        proxy_posy_dict = {}
+        proxy_vely_dict = {}
+        proxy_posz_dict = {}
+        proxy_velz_dict = {}
+        proxy_masses_dict = {}
+        proxy_masses_dict = {}
+
+        i = 0
+
+        while i < 1000 and len(length_dict) > 0:
+
+            key, val = length_dict.popitem()
+            proxy_length_dict[key] = val
+            key, val = length_dict.popitem()
+            proxy_length_dict[key] = val
+            key, val = pid_dict.popitem()
+            proxy_pid_dict[key] = val
+            key, val = ind_dict.popitem()
+            proxy_ind_dict[key] = val
+            key, val = posx_dict.popitem()
+            proxy_posx_dict[key] = val
+            key, val = velx_dict.popitem()
+            proxy_velx_dict[key] = val
+            key, val = posy_dict.popitem()
+            proxy_posy_dict[key] = val
+            key, val = vely_dict.popitem()
+            proxy_vely_dict[key] = val
+            key, val = posz_dict.popitem()
+            proxy_posz_dict[key] = val
+            key, val = velz_dict.popitem()
+            proxy_velz_dict[key] = val
+            key, val = masses_dict.popitem()
+            proxy_masses_dict[key] = val
+            key, val = part_types_dict.popitem()
+            proxy_part_types_dict[key] = val
+
+        # Now need collect on master
+        proxy_all_length = comm.gather(proxy_length_dict, root=0)
+        proxy_all_pid = comm.gather(proxy_pid_dict, root=0)
+        proxy_all_ind = comm.gather(proxy_ind_dict, root=0)
+        proxy_all_posx = comm.gather(proxy_posx_dict, root=0)
+        proxy_all_velx = comm.gather(proxy_velx_dict, root=0)
+        proxy_all_posy = comm.gather(proxy_posy_dict, root=0)
+        proxy_all_vely = comm.gather(proxy_vely_dict, root=0)
+        proxy_all_posz = comm.gather(proxy_posz_dict, root=0)
+        proxy_all_velz = comm.gather(proxy_velz_dict, root=0)
+        proxy_all_masses = comm.gather(proxy_masses_dict, root=0)
+        proxy_all_part_types = comm.gather(proxy_part_types_dict, root=0)
+        all_ngal = comm.gather(len(length_dict), root=0)
+        if rank == 0:
+            ngal = np.sum(all_ngal)
+            all_length.extend(proxy_all_length)
+            all_pid.extend(proxy_all_pid)
+            all_ind.extend(proxy_all_ind)
+            all_posx.extend(proxy_all_posx)
+            all_velx.extend(proxy_all_velx)
+            all_posy.extend(proxy_all_posy)
+            all_vely.extend(proxy_all_vely)
+            all_posz.extend(proxy_all_posz)
+            all_velz.extend(proxy_all_velz)
+            all_masses.extend(proxy_all_masses)
+            all_part_types.extend(proxy_all_part_types)
+
+        ngal = comm.bcast(ngal, root=0)
+
     if rank == 0:
 
         # Loop over halos from other ranks
         for r in range(len(all_length)):
-            if r == 0:
-                continue
 
             # Loop over halos
             for key in all_length[r]:
