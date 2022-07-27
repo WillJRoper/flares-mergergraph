@@ -282,22 +282,32 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         # Loop over halos from other ranks
         for r in range(len(all_length)):
 
-            # Loop over halos
+            # Loop over halos (no guarantee popitem does them in
+            # the exact same order for each dictionary so do individul loops)
             for key in all_length[r]:
                 # Add this particle to the halo
                 length_dict.setdefault(key, 0)
                 length_dict[key] += all_length[r][key]
-
+            for key in all_pid[r]:
                 pid_dict.setdefault(key, []).extend(all_pid[r][key])
+            for key in all_ind[r]:
                 ind_dict.setdefault(key, []).extend(all_ind[r][key])
+            for key in all_posx[r]:
                 posx_dict.setdefault(key, []).extend(all_posx[r][key])
+            for key in all_velx[r]:
                 velx_dict.setdefault(key, []).extend(all_velx[r][key])
+            for key in all_posy[r]:
                 posy_dict.setdefault(key, []).extend(all_posy[r][key])
+            for key in all_vely[r]:
                 vely_dict.setdefault(key, []).extend(all_vely[r][key])
+            for key in all_posz[r]:
                 posz_dict.setdefault(key, []).extend(all_posz[r][key])
+            for key in all_velz[r]:
                 velz_dict.setdefault(key, []).extend(all_velz[r][key])
+            for key in all_masses[r]:
                 masses_dict.setdefault(key,
                                        []).extend(all_masses[r][key])
+            for key in all_part_types[r]:
                 part_types_dict.setdefault(key,
                                            []).extend(all_part_types[r][key])
 
