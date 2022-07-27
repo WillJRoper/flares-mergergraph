@@ -219,7 +219,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         proxy_posz_dict = {}
         proxy_velz_dict = {}
         proxy_masses_dict = {}
-        proxy_masses_dict = {}
+        proxy_part_types_dict = {}
 
         i = 0
 
