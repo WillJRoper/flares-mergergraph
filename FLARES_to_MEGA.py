@@ -227,8 +227,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
             key, val = length_dict.popitem()
             proxy_length_dict[key] = val
-            key, val = length_dict.popitem()
-            proxy_length_dict[key] = val
             key, val = pid_dict.popitem()
             proxy_pid_dict[key] = val
             key, val = ind_dict.popitem()
