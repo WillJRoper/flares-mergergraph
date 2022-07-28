@@ -248,6 +248,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             key, val = part_types_dict.popitem()
             proxy_part_types_dict[key] = val
 
+            i += 1
+
         # Now need collect on master
         proxy_all_length = comm.gather(proxy_length_dict, root=0)
         proxy_all_pid = comm.gather(proxy_pid_dict, root=0)
