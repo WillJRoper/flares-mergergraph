@@ -251,7 +251,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             key, val = part_types_dict.popitem()
             proxy_part_types_dict[key] = val
 
-            # Are we sending too muc yet?
+            # Are we sending too much yet?
             weight = sys.getsizeof(proxy_posx_dict) / 10**9
 
         # Now need collect on master
@@ -583,6 +583,11 @@ def main():
     # Define path to a single snapshot file for metadata
     sim_path = inputs["data"].replace("<reg>", reg)
     single_file = sim_path.replace("<snap>", snap)
+
+    # Exit if the file exists
+    if os.path.isfile(inputs["haloSavePath"] + inputs["halo_basename"]
+                      + reg + "_" + snap + ".hdf5"):
+        return
 
     # Open single file and get DM particle mass
     hdf = h5py.File(single_file, "r")
