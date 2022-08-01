@@ -57,10 +57,13 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     # Define the NULL value in SUBFIND files
     null = 1073741824
 
+    # Set up dictionary for particle ids to be stitched later
+    true_part_ids = {}
+
     # Read in all the relevant data
     with HiddenPrints():
-        true_part_ids = E.read_array("SNAP", sim_path, tag,
-                                     "PartType1/ParticleIDs", numThreads=8)
+        true_part_ids[1] = E.read_array("SNAP", sim_path, tag,
+                                        "PartType1/ParticleIDs", numThreads=8)
         part_ids = E.read_array("PARTDATA", sim_path, tag,
                                 "PartType1/ParticleIDs", numThreads=8)
         part_grp_ids = E.read_array("PARTDATA", sim_path, tag,
@@ -77,7 +80,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
     # Get the number of particles we are dealing with
     npart = part_ids.size
-    true_npart = true_part_ids.size
 
     # Let's bin the particles and split the work up
     rank_bins = np.linspace(0, npart, size + 1, dtype=int)
@@ -124,9 +126,9 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         # Read in all the relevant data
         with HiddenPrints():
             try:
-                true_part_ids = E.read_array("SNAP", sim_path, tag,
-                                             "PartType%d/ParticleIDs" % part_type,
-                                             numThreads=8)
+                true_part_ids[part_type] = E.read_array("SNAP", sim_path, tag,
+                                                        "PartType%d/ParticleIDs" % part_type,
+                                                        numThreads=8)
                 part_ids = E.read_array("PARTDATA", sim_path, tag,
                                         "PartType%d/ParticleIDs" % part_type,
                                         numThreads=8)
@@ -148,7 +150,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                                          numThreads=8, noH=True,
                                          physicalUnits=True)
             except (ValueError, KeyError):
-                true_part_ids = np.array([])
+                true_part_ids[part_type] = np.array([])
                 part_ids = np.array([])
                 part_grp_ids = np.array([])
                 part_subgrp_ids = np.array([])
@@ -162,7 +164,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
         # Get the number of particles we are dealing with
         npart = part_ids.size
-        true_npart = true_part_ids.size
 
         # Let's bin the particles and split the work up
         rank_bins = np.linspace(0, npart, size + 1, dtype=int)
@@ -535,7 +536,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         vel = np.array([[], [], []])
 
     return (halo_ids, length, grpid, subgrpid, pid, ind, pos, vel,
-            masses, types, part_ids, true_npart, nhalos)
+            masses, types, part_ids, nhalos)
 
 
 def main():
@@ -607,12 +608,21 @@ def main():
 
     # Get the particle data for all particle types in the current snapshot
     (halo_ids, length, grpid, subgrpid, pid, ind, pos, vel,
-     masses, part_types, snap_part_ids, true_npart, nhalos) = get_data(tictoc,
-                                                                       reg,
-                                                                       snap,
-                                                                       meta,
-                                                                       inputs[
-                                                                           "data"])
+     masses, part_types, pre_snap_part_ids,  nhalos) = get_data(tictoc,
+                                                                reg,
+                                                                snap,
+                                                                meta,
+                                                                inputs[
+                                                                    "data"])
+
+    # Initialise array to store all particle IDs
+    snap_part_ids = np.zeros(np.sum(meta.npart), dtype=int)
+
+    # Read particle IDs to store combined particle ids array
+    for part_type in meta.part_types:
+        offset = meta.part_ind_offset[part_type]
+        snap_part_ids[offset: offset + meta.npart[part_type]
+                      ] = pre_snap_part_ids[part_type]
 
     if rank == 0:
         message(rank, "Nhalo: %d" % nhalos)
