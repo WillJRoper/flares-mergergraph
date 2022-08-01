@@ -626,6 +626,11 @@ def main():
 
     if rank == 0:
         message(rank, "Nhalo: %d" % nhalos)
+        message(rank, "Npart_dm: %d" % meta.npart[1])
+        message(rank, "Npart_gas: %d" % meta.npart[0])
+        message(rank, "Npart_star: %d" % meta.npart[4])
+        message(rank, "Npart_bh: %d" % meta.npart[5])
+        message(rank, "Npart_tot: %d" % snap_part_ids.size)
 
     # Initialise dictionary for mega halo objects
     results = {}
