@@ -1,11 +1,11 @@
 import sys
 import os
 
-import mega.core.param_utils as p_utils
-import mega.core.utilities as utils
 import h5py
 import mpi4py
 import numpy as np
+import mega.core.param_utils as p_utils
+import mega.core.utilities as utils
 from mega.core.collect_result import collect_halos
 from mega.halo_core.halo import Halo
 from mega.core.serial_io import write_data
