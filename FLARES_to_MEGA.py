@@ -585,13 +585,13 @@ def main():
     single_file = sim_path.replace("<snap>", snap)
 
     print(inputs["haloSavePath"] + inputs["halo_basename"].replace("<reg>", reg)
-          + "_" + snap + ".hdf5", "exists")
+          + snap + ".hdf5", "exists")
 
     # Exit if the file exists
     if os.path.isfile(inputs["haloSavePath"] + inputs["halo_basename"].replace("<reg>", reg)
-                      + "_" + snap + ".hdf5"):
+                      + snap + ".hdf5"):
         print(inputs["haloSavePath"] + inputs["halo_basename"].replace("<reg>", reg)
-              + "_" + snap + ".hdf5", "exists")
+              + snap + ".hdf5", "exists")
         return
 
     # Open single file and get DM particle mass
