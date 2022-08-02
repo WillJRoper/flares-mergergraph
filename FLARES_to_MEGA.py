@@ -585,10 +585,6 @@ def main():
     single_file = sim_path.replace("<snap>", snap)
     inputs["halo_basename"] = inputs["halo_basename"].replace("<reg>", reg)
 
-    print(os.path.isfile(inputs["haloSavePath"] + inputs["halo_basename"]
-                         + snap + ".hdf5"), inputs["haloSavePath"] + inputs["halo_basename"]
-          + snap + ".hdf5", "exists")
-
     # Exit if the file exists
     if os.path.isfile(inputs["haloSavePath"] + inputs["halo_basename"]
                       + snap + ".hdf5"):
@@ -597,10 +593,14 @@ def main():
         return
 
     # Open single file and get DM particle mass
-    hdf = h5py.File(single_file, "r")
-    boxsize = hdf["Header"].attrs["BoxSize"] / 0.6777
-    nparts = hdf["Header"].attrs["NumPart_Total"]
-    hdf.close()
+    try:
+        hdf = h5py.File(single_file, "r")
+        boxsize = hdf["Header"].attrs["BoxSize"] / 0.6777
+        nparts = hdf["Header"].attrs["NumPart_Total"]
+        hdf.close()
+    except OSError:
+        print("File is not on cosma7")
+        return
 
     # Set up object containing housekeeping metadata
     meta = p_utils.Metadata(snaplist, snap_ind, cosmology, inputs,
