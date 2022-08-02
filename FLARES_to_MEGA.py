@@ -539,7 +539,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         vel = np.array([[], [], []])
 
     return (halo_ids, length, grpid, subgrpid, pid, ind, pos, vel,
-            masses, types, part_ids, nhalos)
+            masses, types, true_part_ids, nhalos)
 
 
 def main():
