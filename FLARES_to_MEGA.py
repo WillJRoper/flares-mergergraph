@@ -620,7 +620,8 @@ def main():
 
     if rank == 0:
         say_hello(meta)
-        message(rank, "Running on Region %s and snap %s" % (reg, snap))
+        message(rank, "Running on Region %s and snap %s (id=%d)"
+                % (reg, snap, job_ind))
 
     # Instantiate timer
     tictoc = TicToc(meta)
