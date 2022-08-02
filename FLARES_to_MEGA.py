@@ -129,6 +129,9 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 true_part_ids[part_type] = E.read_array("SNAP", sim_path, tag,
                                                         "PartType%d/ParticleIDs" % part_type,
                                                         numThreads=8)
+            except (ValueError, KeyError):
+                true_part_ids[part_type] = np.array([])
+            try:
                 part_ids = E.read_array("PARTDATA", sim_path, tag,
                                         "PartType%d/ParticleIDs" % part_type,
                                         numThreads=8)
@@ -150,7 +153,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                                          numThreads=8, noH=True,
                                          physicalUnits=True)
             except (ValueError, KeyError):
-                true_part_ids[part_type] = np.array([])
                 part_ids = np.array([])
                 part_grp_ids = np.array([])
                 part_subgrp_ids = np.array([])
@@ -588,8 +590,9 @@ def main():
     # Exit if the file exists
     if os.path.isfile(inputs["haloSavePath"] + inputs["halo_basename"]
                       + snap + ".hdf5"):
-        print(inputs["haloSavePath"] + inputs["halo_basename"]
-              + snap + ".hdf5", "exists")
+        if rank == 0:
+            print(inputs["haloSavePath"] + inputs["halo_basename"]
+                  + snap + ".hdf5", "exists")
         return
 
     # Open single file and get DM particle mass
@@ -599,7 +602,8 @@ def main():
         nparts = hdf["Header"].attrs["NumPart_Total"]
         hdf.close()
     except OSError:
-        print("File is not on cosma7")
+        if rank == 0:
+            print("File is not on cosma7")
         return
 
     # Set up object containing housekeeping metadata
@@ -608,8 +612,8 @@ def main():
                             boxsize=[boxsize, boxsize, boxsize],
                             npart=nparts,
                             z=z)
-
-    print(meta.npart, meta.part_ind_offset)
+    if rank == 0:
+        print(meta.npart, meta.part_ind_offset)
 
     meta.rank = rank
     meta.nranks = size
@@ -637,10 +641,9 @@ def main():
 
     # Read particle IDs to store combined particle ids array
     for part_type in meta.part_types:
-        if len(pre_snap_part_ids[part_type]) > 0:
-            offset = meta.part_ind_offset[part_type]
-            snap_part_ids[offset: offset + meta.npart[part_type]
-                          ] = pre_snap_part_ids[part_type]
+        offset = meta.part_ind_offset[part_type]
+        snap_part_ids[offset: offset + meta.npart[part_type]
+                      ] = pre_snap_part_ids[part_type]
 
     if rank == 0:
         message(rank, "Nhalo: %d" % nhalos)
