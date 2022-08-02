@@ -228,7 +228,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         weight = 0
 
         # Loop until communication is large or there's nothing to send
-        while weight < 0.5 and len(length_dict) > 0:
+        while weight < 0.1 and len(length_dict) > 0:
 
             key, val = length_dict.popitem()
             proxy_length_dict[key] = val
