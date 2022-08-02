@@ -254,7 +254,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             proxy_part_types_dict[key] = val
 
             # Are we sending too much yet?
-            weight = sys.getsizeof(proxy_posx_dict) / 10**9
+            weight = sys.getsizeof(proxy_pid_dict) / 10**9
 
         # Now need collect on master
         proxy_all_length = comm.gather(proxy_length_dict, root=0)
