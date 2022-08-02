@@ -585,7 +585,8 @@ def main():
     single_file = sim_path.replace("<snap>", snap)
     inputs["halo_basename"] = inputs["halo_basename"].replace("<reg>", reg)
 
-    print(inputs["haloSavePath"] + inputs["halo_basename"]
+    print(os.path.isfile(inputs["haloSavePath"] + inputs["halo_basename"]
+                         + snap + ".hdf5"), inputs["haloSavePath"] + inputs["halo_basename"]
           + snap + ".hdf5", "exists")
 
     # Exit if the file exists
