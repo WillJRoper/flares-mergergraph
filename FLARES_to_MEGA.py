@@ -590,8 +590,8 @@ def main():
     # Exit if the file exists
     if os.path.isfile(inputs["haloSavePath"] + inputs["halo_basename"].replace("<reg>", reg)
                       + "_" + snap + ".hdf5"):
-        print(inputs["haloSavePath"] + inputs["halo_basename"]
-              + reg + "_" + snap + ".hdf5", "exists")
+        print(inputs["haloSavePath"] + inputs["halo_basename"].replace("<reg>", reg)
+              + "_" + snap + ".hdf5", "exists")
         return
 
     # Open single file and get DM particle mass
