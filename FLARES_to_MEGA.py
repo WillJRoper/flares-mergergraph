@@ -609,6 +609,8 @@ def main():
                             npart=nparts,
                             z=z)
 
+    print(meta.npart, meta.part_ind_offset)
+
     meta.rank = rank
     meta.nranks = size
 
@@ -635,9 +637,10 @@ def main():
 
     # Read particle IDs to store combined particle ids array
     for part_type in meta.part_types:
-        offset = meta.part_ind_offset[part_type]
-        snap_part_ids[offset: offset + meta.npart[part_type]
-                      ] = pre_snap_part_ids[part_type]
+        if len(pre_snap_part_ids[part_type]) > 0:
+            offset = meta.part_ind_offset[part_type]
+            snap_part_ids[offset: offset + meta.npart[part_type]
+                          ] = pre_snap_part_ids[part_type]
 
     if rank == 0:
         message(rank, "Nhalo: %d" % nhalos)
