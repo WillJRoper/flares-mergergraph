@@ -228,7 +228,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         weight = 0
 
         # Loop until communication is large or there's nothing to send
-        while weight < 0.1 and len(length_dict) > 0:
+        while weight < 1000 and len(length_dict) > 0:
 
             key, val = length_dict.popitem()
             proxy_length_dict[key] = val
@@ -254,7 +254,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             proxy_part_types_dict[key] = val
 
             # Are we sending too much yet?
-            weight = sys.getsizeof(proxy_pid_dict) / 10**9
+            weight = len(length_dict)
 
         # Now need collect on master
         proxy_all_length = comm.gather(proxy_length_dict, root=0)
