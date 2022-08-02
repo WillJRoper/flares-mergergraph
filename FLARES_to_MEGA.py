@@ -583,14 +583,15 @@ def main():
     # Define path to a single snapshot file for metadata
     sim_path = inputs["data"].replace("<reg>", reg)
     single_file = sim_path.replace("<snap>", snap)
+    inputs["halo_basename"] = inputs["halo_basename"].replace("<reg>", reg)
 
-    print(inputs["haloSavePath"] + inputs["halo_basename"].replace("<reg>", reg)
+    print(inputs["haloSavePath"] + inputs["halo_basename"]
           + snap + ".hdf5", "exists")
 
     # Exit if the file exists
-    if os.path.isfile(inputs["haloSavePath"] + inputs["halo_basename"].replace("<reg>", reg)
+    if os.path.isfile(inputs["haloSavePath"] + inputs["halo_basename"]
                       + snap + ".hdf5"):
-        print(inputs["haloSavePath"] + inputs["halo_basename"].replace("<reg>", reg)
+        print(inputs["haloSavePath"] + inputs["halo_basename"]
               + snap + ".hdf5", "exists")
         return
 
@@ -755,7 +756,7 @@ def main():
         # Write out file
         write_data(tictoc, meta, newPhaseID, newPhaseSubID,
                    results_dict=results_dict, sub_results_dict={},
-                   sim_pids=snap_part_ids, basename_mod=reg,
+                   sim_pids=snap_part_ids,
                    extra_data=extra_data)
 
         if meta.verbose:
