@@ -101,7 +101,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     for ind in range(rank_bins[rank], rank_bins[rank + 1]):
 
         # Is this particle in a subgroup?
-        if part_subgrp_ids[ind] == null:
+        if part_subgrp_ids[ind] == null or part_grp_ids[ind] == null:
             continue
 
         # Define this halo's key
@@ -174,7 +174,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         for ind in range(rank_bins[rank], rank_bins[rank + 1]):
 
             # Is this particle in a subgroup?
-            if part_subgrp_ids[ind] == null:
+            if part_subgrp_ids[ind] == null or part_grp_ids[ind] == null:
                 continue
 
             # Define this halo's key
@@ -612,8 +612,6 @@ def main():
                             boxsize=[boxsize, boxsize, boxsize],
                             npart=nparts,
                             z=z)
-    if rank == 0:
-        print(meta.npart, meta.part_ind_offset)
 
     meta.rank = rank
     meta.nranks = size
@@ -679,7 +677,8 @@ def main():
                                    subgrpid[ihalo - halo_offset]),
                                   pid[b:e], pos[b:e, :], vel[b:e, :],
                                   part_types[b:e],
-                                  masses[b:e], int_nrg, 10, meta)
+                                  masses[b:e], int_nrg, 10, meta,
+                                  calc_energy=False)
             results[ihalo].clean_halo()
             results[ihalo].memory = utils.get_size(results[ihalo])
 
