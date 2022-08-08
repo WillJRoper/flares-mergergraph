@@ -583,7 +583,8 @@ def main():
     z = float(z_str[0] + '.' + z_str[1])
 
     # Define path to a single snapshot file for metadata
-    sim_path = inputs["data"].replace("<reg>", reg)
+    inputs["data"] = inputs["data"].replace("<reg>", reg)
+    sim_path = inputs["data"]
     single_file = sim_path.replace("<snap>", snap)
     inputs["halo_basename"] = inputs["halo_basename"].replace("<reg>", reg)
 
