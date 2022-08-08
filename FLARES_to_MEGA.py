@@ -610,7 +610,7 @@ def main():
     # Set up object containing housekeeping metadata
     meta = p_utils.Metadata(snaplist, snap_ind, cosmology, inputs,
                             flags, params, simulation,
-                            boxsize=[boxsize, boxsize, boxsize],
+                            boxsize=np.array([boxsize, boxsize, boxsize]),
                             npart=nparts,
                             z=z)
 
