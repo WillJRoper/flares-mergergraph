@@ -760,6 +760,7 @@ def main():
             grp, subgrp = results[ihalo].shifted_inds
             extra_data["group_number"][ihalo] = grp
             extra_data["subgroup_number"][ihalo] = subgrp
+        print(extra_data)
 
         # Write out file
         write_data(tictoc, meta, newPhaseID, newPhaseSubID,
