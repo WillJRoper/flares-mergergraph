@@ -43,8 +43,8 @@ def get_galaxy_info():
     snap_root = hdf[tag]
 
     # Get the start index and stride
-    start = snap_root["start_index"][mega_ind]
-    stride = snap_root["stride"][mega_ind]
+    prog_start = snap_root["prog_start_index"][mega_ind]
+    prog_stride = snap_root["prog_stride"][mega_ind]
 
     # How many halos are we dealing with?
     nhalo = snap_root.attrs["nhalo"]
@@ -53,10 +53,13 @@ def get_galaxy_info():
     print("======== LINKING DATA FOR GALAXY: (%d, %d) ========"
           % (grp, subgrp))
     for key in snap_root.keys():
+        if "desc" in key:
+            continue
         if snap_root[key].size == nhalo:
             print(key, "->", snap_root[key][mega_ind])
         else:
-            print(key, "->", snap_root[key][start: start + stride])
+            print(key, "->", snap_root[key]
+                  [prog_start: prog_start + prog_stride])
     print("=" * len("======== LINKING DATA FOR GALAXY: (%d, %d) "
                     "========" % (grp, subgrp)))
 
