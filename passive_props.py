@@ -47,7 +47,7 @@ def get_galaxy_info():
     prog_start = snap_root["prog_start_index"][mega_ind]
     prog_stride = snap_root["n_progs"][mega_ind]
 
-    print(prog_start, prog_stride)
+    print(prog_start, prog_stride, prog_start + prog_stride)
 
     # How many halos are we dealing with?
     nhalo = snap_root.attrs["nhalo"]
@@ -58,6 +58,7 @@ def get_galaxy_info():
     for key in snap_root.keys():
         if "desc" in key:
             continue
+        print(key)
         if snap_root[key].size == nhalo:
             print(key, "->", snap_root[key][mega_ind])
         else:
