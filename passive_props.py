@@ -10,7 +10,7 @@ def get_galaxy_info():
     # Define paths
     path = "/cosma/home/dp004/dc-rope1/cosma7/FLARES/flares-mergergraph/"
     halo_base = "data/halos/MEGAFLARES_halos_<reg>_<snap>.hdf5"
-    graph_base = "data/dgraph/MEGAFLARES_graph_<reg>.hdf5"
+    graph_base = "data/dgraph/MEGAFLARES_graph_<reg>_<snap>.hdf5"
 
     # Get ID from command line
     grp = int(sys.argv[1])
@@ -22,6 +22,7 @@ def get_galaxy_info():
     halo_base = halo_base.replace("<reg>", region)
     graph_base = graph_base.replace("<reg>", region)
     halo_base = halo_base.replace("<snap>", tag)
+    graph_base = graph_base.replace("<snap>", tag)
 
     # Open halo file
     hdf = h5py.File(path + halo_base, "r")
@@ -41,7 +42,7 @@ def get_galaxy_info():
     hdf = h5py.File(path + graph_base, "r")
 
     # Access this snapshot
-    snap_root = hdf[tag]
+    snap_root = hdf
 
     # Get the start index and stride
     prog_start = snap_root["prog_start_index"][mega_ind][0]
@@ -62,7 +63,8 @@ def get_galaxy_info():
         if snap_root[key].shape[0] == nhalo:
             print(key, "->", snap_root[key][mega_ind])
         else:
-            print(key, "->", snap_root[key]
+            print(key, ":")
+            print(snap_root[key]
                   [prog_start: prog_start + prog_stride])
     print("=" * len("======== LINKING DATA FOR GALAXY: (%d, %d) "
                     "========" % (grp, subgrp)))
