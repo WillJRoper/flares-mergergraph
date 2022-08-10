@@ -47,6 +47,8 @@ def get_galaxy_info():
     prog_start = snap_root["prog_start_index"][mega_ind]
     prog_stride = snap_root["n_progs"][mega_ind]
 
+    print(prog_start, prog_stride)
+
     # How many halos are we dealing with?
     nhalo = snap_root.attrs["nhalo"]
 
