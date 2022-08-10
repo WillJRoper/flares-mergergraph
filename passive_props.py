@@ -57,9 +57,8 @@ def get_galaxy_info():
     print("======== LINKING DATA FOR GALAXY: (%d, %d) ========"
           % (grp, subgrp))
     for key in snap_root.keys():
-        if "Desc" in key:
+        if tag == "010_z005p000" and "Desc" in key or "desc" in key:
             continue
-        print(key)
         if snap_root[key].shape[0] == nhalo:
             print(key, "->", snap_root[key][mega_ind])
         else:

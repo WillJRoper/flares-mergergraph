@@ -51,7 +51,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
     # Open single file and get DM particle mass
     hdf = h5py.File(single_file, "r")
-    part_mass = hdf["Header"].attrs["MassTable"][1] * 10 ** 10 / meta.h
+    part_mass = hdf["Header"].attrs["MassTable"][1] / meta.h
     hdf.close()
 
     # Define the NULL value in SUBFIND files
@@ -350,7 +350,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         all_len = np.zeros(nhalos, dtype=int)
         all_grpid = np.zeros(nhalos, dtype=int)
         all_subgrpid = np.zeros(nhalos, dtype=int)
-        all_halo_ids = np.zeros(nhalos, dtype=int)
         all_pid = []
         all_ind = []
         all_posx = []
@@ -369,7 +368,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             grp, subgrp = key[0], key[1]
 
             # Store data
-            all_halo_ids[ihalo] = ihalo
             all_begin[ihalo] = len(all_pid)
             all_len[ihalo] = length_dict[key]
             all_grpid[ihalo] = grp
@@ -438,7 +436,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             nhalos_on_rank[r] = len(halos_on_rank[r])
 
         # Set up dictionaries for communicating data
-        halo_ids = [None for r in range(size)]
         length = [None for r in range(size)]
         grpid = [None for r in range(size)]
         subgrpid = [None for r in range(size)]
@@ -465,7 +462,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 part_slice = (rank_begin, rank_begin + rank_len)
 
                 # Get store data
-                halo_ids[r] = all_halo_ids[halo_slice[0]: halo_slice[1]]
                 length[r] = all_len[halo_slice[0]: halo_slice[1]]
                 grpid[r] = all_grpid[halo_slice[0]: halo_slice[1]]
                 subgrpid[r] = all_subgrpid[halo_slice[0]: halo_slice[1]]
@@ -480,7 +476,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 masses[r] = all_masses[part_slice[0]: part_slice[1]]
                 types[r] = all_part_types[part_slice[0]: part_slice[1]]
             else:
-                halo_ids[r] = np.array([], dtype=int)
                 length[r] = np.array([], dtype=int)
                 grpid[r] = np.array([], dtype=int)
                 subgrpid[r] = np.array([], dtype=int)
@@ -497,7 +492,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
     else:
         nhalos = None
-        halo_ids = None
         begin = None
         length = None
         grpid = None
@@ -517,7 +511,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     nhalos = comm.bcast(nhalos, root=0)
 
     # Scatter the results of the decompostion
-    halo_ids = comm.scatter(halo_ids, root=0)
     length = comm.scatter(length, root=0)
     grpid = comm.scatter(grpid, root=0)
     subgrpid = comm.scatter(subgrpid, root=0)
@@ -540,7 +533,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         pos = np.array([[], [], []])
         vel = np.array([[], [], []])
 
-    return (halo_ids, length, grpid, subgrpid, pid, ind, pos, vel,
+    return (length, grpid, subgrpid, pid, ind, pos, vel,
             masses, types, true_part_ids, nhalos)
 
 
@@ -628,13 +621,10 @@ def main():
     meta.tictoc = tictoc
 
     # Get the particle data for all particle types in the current snapshot
-    (halo_ids, length, grpid, subgrpid, pid, ind, pos, vel,
-     masses, part_types, pre_snap_part_ids,  nhalos) = get_data(tictoc,
-                                                                reg,
-                                                                snap,
-                                                                meta,
-                                                                inputs[
-                                                                    "data"])
+    (length, grpid, subgrpid, pid, ind, pos, vel,
+     masses, part_types, pre_snap_part_ids,  nhalos) = get_data(
+         tictoc, reg, snap, meta, inputs["data"]
+    )
 
     # Initialise array to store all particle IDs
     snap_part_ids = np.zeros(np.sum(meta.npart), dtype=int)
@@ -658,14 +648,13 @@ def main():
 
     # Loop over galaxies and create mega objects
     b = 0
-    if len(halo_ids) > 0:
-        halo_offset = halo_ids[0]
-        for ihalo, l in zip(halo_ids, length):
+    if len(length) > 0:
+        for ihalo, l in enumerate(length):
 
             # Compute end
             e = b + l
 
-            if len(ind[b:e]) < 10:
+            if l < 10:
                 b = e
                 continue
 
@@ -674,8 +663,8 @@ def main():
 
             # Store this halo
             results[ihalo] = Halo(tictoc, ind[b:e],
-                                  (grpid[ihalo - halo_offset],
-                                   subgrpid[ihalo - halo_offset]),
+                                  (grpid[ihalo],
+                                   subgrpid[ihalo]),
                                   pid[b:e], pos[b:e, :], vel[b:e, :],
                                   part_types[b:e],
                                   masses[b:e], int_nrg, 10, meta,
@@ -748,7 +737,7 @@ def main():
         # Lets combine all the halos we have collected from the other ranks
         res_tup = collect_halos(tictoc, meta, collected_results,
                                 [{}, ] * size)
-        (newPhaseID, newPhaseSubID, results_dict, sub_results_dict) = res_tup
+        (newPhaseID, newPhaseSubID, results, sub_results_dict) = res_tup
 
         if meta.verbose:
             tictoc.report("Combining results")
@@ -760,11 +749,12 @@ def main():
             grp, subgrp = results[ihalo].shifted_inds
             extra_data["group_number"][ihalo] = grp
             extra_data["subgroup_number"][ihalo] = subgrp
-        print(extra_data)
+        message(meta.rank, "Extra data:")
+        message(meta.rank, extra_data)
 
         # Write out file
         write_data(tictoc, meta, newPhaseID, newPhaseSubID,
-                   results_dict=results_dict, sub_results_dict={},
+                   results_dict=results, sub_results_dict={},
                    sim_pids=snap_part_ids,
                    extra_data=extra_data)
 
