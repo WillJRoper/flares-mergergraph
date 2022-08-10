@@ -51,7 +51,7 @@ def get_galaxy_info():
     print(prog_start, prog_stride, prog_start + prog_stride)
 
     # How many halos are we dealing with?
-    nhalo = snap_root.attrs["nhalo"]
+    nhalo = snap_root["n_progs"].size
 
     # Print out this halos results from the graph
     print("======== LINKING DATA FOR GALAXY: (%d, %d) ========"
