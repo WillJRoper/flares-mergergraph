@@ -59,7 +59,7 @@ def get_galaxy_info():
         if "Desc" in key:
             continue
         print(key)
-        if snap_root[key].size == nhalo:
+        if snap_root[key].shape[0] == nhalo:
             print(key, "->", snap_root[key][mega_ind])
         else:
             print(key, "->", snap_root[key]
