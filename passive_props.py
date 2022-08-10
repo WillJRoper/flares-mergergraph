@@ -56,7 +56,7 @@ def get_galaxy_info():
     print("======== LINKING DATA FOR GALAXY: (%d, %d) ========"
           % (grp, subgrp))
     for key in snap_root.keys():
-        if "desc" in key:
+        if "Desc" in key:
             continue
         print(key)
         if snap_root[key].size == nhalo:
