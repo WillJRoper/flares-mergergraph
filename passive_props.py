@@ -59,3 +59,7 @@ def get_galaxy_info():
             print(key, "->", snap_root[key][start: start + stride])
     print("=" * len("======== LINKING DATA FOR GALAXY: (%d, %d) "
                     "========" % (grp, subgrp)))
+
+
+if len(sys.argv) > 1:
+    get_galaxy_info()
