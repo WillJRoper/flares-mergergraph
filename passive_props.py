@@ -29,6 +29,7 @@ def get_galaxy_info():
     # Find this galaxy's MEGA ID
     grps = hdf["group_number"][...]
     subgrps = hdf["subgroup_number"][...]
+    print(grps, subgrps)
     mega_ind = np.where(np.logical_and(grps == grp, subgrps == subgrp))[0]
 
     print("GroupNumber:", grp, "SubGroupNumber:", subgrp,
