@@ -44,8 +44,8 @@ def get_galaxy_info():
     snap_root = hdf[tag]
 
     # Get the start index and stride
-    prog_start = snap_root["prog_start_index"][mega_ind]
-    prog_stride = snap_root["n_progs"][mega_ind]
+    prog_start = snap_root["prog_start_index"][mega_ind][0]
+    prog_stride = snap_root["n_progs"][mega_ind][0]
 
     print(prog_start, prog_stride, prog_start + prog_stride)
 
