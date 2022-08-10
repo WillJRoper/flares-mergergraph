@@ -136,6 +136,8 @@ def plot_merger_ssfr():
         masses = hdf_halo["part_type_masses"][...]
         hdf_halo.close()
 
+        print(masses)
+
         # Get contribution information
         prog_mass_conts = hdf_graph["ProgMassContribution"][...]
         prog_npart_conts = hdf_graph["ProgNPartContribution"][...]
