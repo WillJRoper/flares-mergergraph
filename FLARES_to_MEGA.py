@@ -747,7 +747,7 @@ def main():
                       "subgroup_number": np.zeros(len(results), dtype=int)}
         for key in results:
             ihalo = key[1]
-            grp, subgrp = results[ihalo].shifted_inds
+            grp, subgrp = results[key].shifted_inds
             extra_data["group_number"][ihalo] = grp
             extra_data["subgroup_number"][ihalo] = subgrp
         message(meta.rank, "Extra data:")
