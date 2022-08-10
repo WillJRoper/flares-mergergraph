@@ -745,7 +745,8 @@ def main():
         # Create extra data arrays
         extra_data = {"group_number": np.zeros(len(results), dtype=int),
                       "subgroup_number": np.zeros(len(results), dtype=int)}
-        for ihalo in results:
+        for key in results:
+            ihalo = key[1]
             grp, subgrp = results[ihalo].shifted_inds
             extra_data["group_number"][ihalo] = grp
             extra_data["subgroup_number"][ihalo] = subgrp
