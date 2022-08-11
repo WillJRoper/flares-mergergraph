@@ -14,6 +14,7 @@ def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_mass_cont,
         " LINKING DATA FOR GALAXY: (%d, %d = %d) " % (
             grp, subgrp, mega_ind) + "=" * pad
     length = len(header)
+    print(header)
     print(pad_print_middle("Nprog_all:", true_nprog, length=length))
     print(pad_print_middle("Nprog_major:", nprog_major, length=length))
     print(pad_print_middle("ProgMassContribution:", prog_mass_cont, length=length))
@@ -132,7 +133,7 @@ def plot_merger_ssfr():
         # Get MEGA galaxy IDs and masses
         mega_grps = hdf_halo["group_number"][...]
         mega_subgrps = hdf_halo["subgroup_number"][...]
-        masses = hdf_halo["masses"][...]
+        masses = hdf_halo["part_type_masses"][...]
         hdf_halo.close()
 
         # Get contribution information
@@ -157,13 +158,11 @@ def plot_merger_ssfr():
             start = start_index[mega_ind][0]
             stride = nprogs[mega_ind][0]
 
-            print(start, stride)
-
             if stride == 0:
                 nprog = 0
                 mass = masses[mega_ind] * 10 ** 10
             else:
-                prog_cont = prog_mass_conts[start: start + stride]
+                prog_cont = prog_mass_conts[start: start + stride] * 10 ** 10
                 prog_ncont = prog_npart_conts[start: start + stride]
                 mass = masses[mega_ind] * 10 ** 10
 
@@ -175,10 +174,12 @@ def plot_merger_ssfr():
                 # Get only "true" contributions
                 nprog = tot_prog_cont[okinds].size
 
-                if ssfr < 10**-1:
-                    print_info(g, sg, mega_ind, stride, nprog,
-                               prog_cont[okinds, :], prog_ncont[okinds, :],
-                               mass)
+                print(ssfr)
+
+                # if ssfr < 10**-1:
+                #     print_info(g, sg, mega_ind, stride, nprog,
+                #                prog_cont[okinds, :], prog_ncont[okinds, :],
+                #                mass)
 
             # Include this result
             tot_nprogs.append(nprog)
