@@ -153,24 +153,28 @@ def plot_merger_ssfr():
                                                mega_subgrps == sg))[0]
 
             # Get this galaxy's data
-            start = start_index[mega_ind]
-            stride = nprog[mega_ind]
-            print(g, sg, ind, mega_ind, start, stride)
-            prog_cont = prog_mass_conts[start: start + stride]
-            prog_ncont = prog_npart_conts[start: start + stride]
-            mass = masses[mega_ind]
+            start = start_index[mega_ind][0]
+            stride = nprog[mega_ind][0]
 
-            # Limit galaxy's contribution to those contributing at least 10%
-            tot_prog_cont = np.sum(prog_cont, axis=1)
-            frac_prog_cont = tot_prog_cont / np.sum(mass)
-            okinds = frac_prog_cont > 0.1
+            if stride == 0:
+                nprog = 0
+                mass = masses[mega_ind]
+            else:
+                prog_cont = prog_mass_conts[start: start + stride]
+                prog_ncont = prog_npart_conts[start: start + stride]
+                mass = masses[mega_ind]
 
-            # Get only "true" contributions
-            nprog = tot_prog_cont[okinds].size
+                # Limit galaxy's contribution to those contributing at least 10%
+                tot_prog_cont = np.sum(prog_cont, axis=1)
+                frac_prog_cont = tot_prog_cont / np.sum(mass)
+                okinds = frac_prog_cont > 0.1
 
-            if ssfr < 10**-1:
-                print_info(g, sg, mega_ind, stride, nprog,
-                           prog_cont[okinds, :], prog_ncont[okinds, :])
+                # Get only "true" contributions
+                nprog = tot_prog_cont[okinds].size
+
+                if ssfr < 10**-1:
+                    print_info(g, sg, mega_ind, stride, nprog,
+                               prog_cont[okinds, :], prog_ncont[okinds, :])
 
             # Include this result
             tot_nprogs.append(nprog)
