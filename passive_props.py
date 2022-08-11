@@ -137,8 +137,6 @@ def plot_merger_ssfr():
         masses = hdf_halo["masses"][...]
         hdf_halo.close()
 
-        print(masses)
-
         # Get contribution information
         prog_mass_conts = hdf_graph["ProgMassContribution"][...]
         prog_npart_conts = hdf_graph["ProgNPartContribution"][...]
@@ -152,7 +150,7 @@ def plot_merger_ssfr():
             # Extract this group, subgroup and ssfrs
             g, sg = grps[ind], subgrps[ind]
             ssfr = ssfrs[ind]
-            smass = star_masses[ind]
+            smass = star_masses[ind] * 10 ** 10
 
             # Which mega galaxy is this?
             mega_ind = np.where(np.logical_and(mega_grps == g,
@@ -161,7 +159,7 @@ def plot_merger_ssfr():
             # Get this galaxy's data
             start = start_index[mega_ind][0]
             stride = nprogs[mega_ind][0]
-            mass = masses[mega_ind, :] * 10 ** 10
+            mass = masses[mega_ind] * 10 ** 10
 
             # Apply mass cut
             if smass < 10 ** 9:
