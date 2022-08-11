@@ -118,6 +118,7 @@ def plot_merger_ssfr():
         # Get FLARES galaxy IDs
         grps = hdf_f[reg][snap]["Galaxy"]["GroupNumber"]
         subgrps = hdf_f[reg][snap]["Galaxy"]["SubGroupNumber"]
+        star_masses = hdf_f[reg][snap]["Galaxy"]["Mstar_aperture"]["30"][...]
 
         # Get sSFRs
         ssfrs = hdf_q[snap][reg]["sSFR"]["50Myr"][...]
@@ -133,7 +134,7 @@ def plot_merger_ssfr():
         # Get MEGA galaxy IDs and masses
         mega_grps = hdf_halo["group_number"][...]
         mega_subgrps = hdf_halo["subgroup_number"][...]
-        masses = hdf_halo["part_type_masses"][...]
+        masses = hdf_halo["masses"][...]
         hdf_halo.close()
 
         print(masses)
@@ -151,6 +152,7 @@ def plot_merger_ssfr():
             # Extract this group, subgroup and ssfrs
             g, sg = grps[ind], subgrps[ind]
             ssfr = ssfrs[ind]
+            smass = star_masses[ind]
 
             # Which mega galaxy is this?
             mega_ind = np.where(np.logical_and(mega_grps == g,
@@ -161,10 +163,8 @@ def plot_merger_ssfr():
             stride = nprogs[mega_ind][0]
             mass = masses[mega_ind, :] * 10 ** 10
 
-            print(mass)
-
             # Apply mass cut
-            if mass[4] < 10 ** 9:
+            if smass < 10 ** 9:
                 continue
 
             if stride == 0:
@@ -176,7 +176,7 @@ def plot_merger_ssfr():
 
                 # Limit galaxy's contribution to those contributing at least 10%
                 tot_prog_cont = np.sum(prog_cont, axis=1)
-                frac_prog_cont = tot_prog_cont / np.sum(mass)
+                frac_prog_cont = tot_prog_cont / mass
                 okinds = frac_prog_cont > 0.1
 
                 # Get only "true" contributions
