@@ -19,12 +19,14 @@ def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_halo_ids,
     print(header)
     print(pad_print_middle("| Nprog_all:", str(true_nprog) + " |", length=length))
     print("|" + "-" * (length - 2) + "|")
-    print(pad_print_middle("| Nprog_major:", nprog_major, length=length))
-    print("|" + "-" * (length - 2) + "|")
-    print(pad_print_middle("| log10(M_tot/M_sun):", "%.2f" % (np.log10(mass)),
+    print(pad_print_middle("| Nprog_major:", str(nprog_major) + " |",
                            length=length))
     print("|" + "-" * (length - 2) + "|")
-    print("| ProgMassContribution:")
+    print(pad_print_middle("| log10(M_tot/M_sun):",
+                           "%.2f |" % (np.log10(mass)),
+                           length=length))
+    print("|" + "-" * (length - 2) + "|")
+    print(pad_print_middle("| ProgMassContribution:", "|", length=length))
     print(pad_print_middle("| ProgenitorID", "log10(M_cont/M_sun) |",
                            length=length))
     print("|" + "-" * (length - 2) + "|")
@@ -39,13 +41,13 @@ def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_halo_ids,
                                                    prog_mass_cont[i, 5]),
             length=length))
     print("|" + "-" * (length - 2) + "|")
-    print("| ProgNPartContribution:")
+    print(pad_print_middle("| ProgNPartContribution:", "|", length=length))
     print(pad_print_middle("| ProgenitorID", "N_cont |",
                            length=length))
     for i, prog in enumerate(prog_halo_ids):
         print(pad_print_middle("| " + str(prog) + ":", prog_npart_cont[i, :],
                                length=length - 2), "|")
-    print("|" + "-" * (length - 2) + "|")
+    print("=" * length)
 
 
 def get_galaxy_info():
