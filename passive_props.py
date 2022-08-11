@@ -12,7 +12,7 @@ def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_halo_ids,
     # Convert units on mass
     prog_mass_cont = np.log10(prog_mass_cont)
 
-    pad = 60
+    pad = 90
     header = "{:=^60}".format("LINKING DATA FOR GALAXY: (%d, %d = %d) " % (
         grp, subgrp, mega_ind))
     length = len(header)
