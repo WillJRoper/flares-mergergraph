@@ -3,6 +3,7 @@ import sys
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
+from mega.core.talking_utils import pad_print_middle
 
 
 def get_galaxy_info():
@@ -48,25 +49,31 @@ def get_galaxy_info():
     prog_start = snap_root["prog_start_index"][mega_ind][0]
     prog_stride = snap_root["n_progs"][mega_ind][0]
 
-    print(prog_start, prog_stride, prog_start + prog_stride)
-
     # How many halos are we dealing with?
     nhalo = snap_root["n_progs"].size
 
+    # Lets get the data and clean it up
+    true_nprog = prog_stride
+    prog_mass_cont = snap_root["ProgMassContribution"][prog_start: prog_start +
+                                                       prog_stride] * 10 ** 10
+    prog_npart_cont = snap_root["ProgNPartContribution"][prog_start: prog_start +
+                                                         prog_stride] * 10 ** 10
+    okinds = prog_mass_cont[:, 0] > 10 ** 8
+    nprog_major = prog_mass_cont[okinds, :].shape[0]
+    prog_mass_cont = prog_mass_cont[okinds, :]
+    prog_npart_cont = prog_npart_cont[okinds, :]
+
+    hdf.close()
+
     # Print out this halos results from the graph
-    print("======== LINKING DATA FOR GALAXY: (%d, %d) ========"
-          % (grp, subgrp))
-    for key in snap_root.keys():
-        if tag == "010_z005p000" and "Desc" in key or "desc" in key:
-            continue
-        if snap_root[key].shape[0] == nhalo:
-            print(key, "->", snap_root[key][mega_ind])
-        else:
-            print(key, ":")
-            print(snap_root[key]
-                  [prog_start: prog_start + prog_stride])
-    print("=" * len("======== LINKING DATA FOR GALAXY: (%d, %d) "
-                    "========" % (grp, subgrp)))
+    header = "=" * 7 + \
+        " LINKING DATA FOR GALAXY: (%d, %d) " % (grp, subgrp) + "=" * 7
+    length = len(header)
+    print(pad_print_middle("Nprog_all:", true_nprog, length=length))
+    print(pad_print_middle("Nprog_major:", nprog_major, length=length))
+    print(pad_print_middle("ProgMassContribution:", prog_mass_cont, length=length))
+    print(pad_print_middle("ProgNPartContribution:", prog_npart_cont, length=length))
+    print("=" * length)
 
 
 if len(sys.argv) > 1:
