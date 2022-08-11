@@ -179,6 +179,9 @@ def plot_merger_ssfr():
             else:
                 central.append(0)
 
+    hdf_f.close()
+    hdf_q.close()
+
     # Convert to arrays
     tot_nprogs = np.array(tot_nprogs, dtype=int)
     tot_ssfrs = np.array(tot_ssfrs, dtype=np.float64)
