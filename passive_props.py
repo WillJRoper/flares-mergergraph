@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 from mega.core.talking_utils import pad_print_middle
 
 
-def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_mass_cont,
-               prog_npart_cont, mass):
+def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_halo_ids,
+               prog_mass_cont, prog_npart_cont, mass):
 
-    pad = 15
+    pad = 30
     header = "=" * pad + \
         " LINKING DATA FOR GALAXY: (%d, %d = %d) " % (
             grp, subgrp, mega_ind) + "=" * pad
@@ -17,9 +17,15 @@ def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_mass_cont,
     print(header)
     print(pad_print_middle("Nprog_all:", true_nprog, length=length))
     print(pad_print_middle("Nprog_major:", nprog_major, length=length))
-    print(pad_print_middle("ProgMassContribution:", prog_mass_cont, length=length))
-    print(pad_print_middle("ProgNPartContribution:", prog_npart_cont, length=length))
     print(pad_print_middle("Halo Mass:", mass, length=length))
+    print("ProgMassContribution:")
+    for i, prog in enumerate(prog_halo_ids):
+        print(pad_print_middle(str(prog) + ":", prog_mass_cont[i, :],
+                               length=length))
+    print("ProgNPartContribution:")
+    for i, prog in enumerate(prog_halo_ids):
+        print(pad_print_middle(str(prog) + ":", prog_npart_cont[i, :],
+                               length=length))
     print("=" * length)
 
 
@@ -140,6 +146,7 @@ def plot_merger_ssfr():
         # Get contribution information
         prog_mass_conts = hdf_graph["ProgMassContribution"][...]
         prog_npart_conts = hdf_graph["ProgNPartContribution"][...]
+        prog_ids = hdf_graph["ProgHaloIDs"][...]
         start_index = hdf_graph["prog_start_index"][...]
         nprogs = hdf_graph["n_progs"][...]
         hdf_graph.close()
@@ -170,6 +177,7 @@ def plot_merger_ssfr():
             else:
                 prog_cont = prog_mass_conts[start: start + stride] * 10 ** 10
                 prog_ncont = prog_npart_conts[start: start + stride]
+                progs = prog_ids[start: start + stride]
                 mass = masses[mega_ind] * 10 ** 10
 
                 # Limit galaxy's contribution to those contributing at least 10%
@@ -180,8 +188,8 @@ def plot_merger_ssfr():
                 # Get only "true" contributions
                 nprog = tot_prog_cont[okinds].size
 
-                if ssfr < 10**-1:
-                    print_info(g, sg, mega_ind, stride, nprog,
+                if ssfr < -1:
+                    print_info(g, sg, mega_ind, stride, nprog, progs,
                                prog_cont[okinds, :], prog_ncont[okinds, :],
                                mass)
 
@@ -206,7 +214,7 @@ def plot_merger_ssfr():
     ax = fig.add_subplot(111)
 
     # Plot the scatter of "normal" galaxies
-    ax.scatter(np.log10(tot_ssfrs), tot_nprogs,
+    ax.scatter(tot_ssfrs, tot_nprogs,
                marker=".", color="k", alpha=0.6)
 
     # Add lines
@@ -216,13 +224,13 @@ def plot_merger_ssfr():
     # Plot the scatter for passive galaxies split by central status
     okinds = tot_ssfrs < 10 ** -1
     cent = central[okinds]
-    ax.scatter(np.log10(tot_ssfrs[okinds][cent]), tot_nprogs[okinds][cent],
+    ax.scatter(tot_ssfrs[okinds][cent], tot_nprogs[okinds][cent],
                marker="o", color="r", label="Central")
-    ax.scatter(np.log10(tot_ssfrs[okinds][~cent]), tot_nprogs[okinds][~cent],
+    ax.scatter(tot_ssfrs[okinds][~cent], tot_nprogs[okinds][~cent],
                marker="o", color="g", label="Satellite")
 
     # Label axes
-    ax.set_xlabel("$\log_{10}(\mathrm{sSFR} / \mathrm={Gyr})$")
+    ax.set_xlabel("$\log_{10}(\mathrm{sSFR} / \mathrm{Gyr})$")
     ax.set_ylabel("$N_{prog}$")
 
     # Legend
