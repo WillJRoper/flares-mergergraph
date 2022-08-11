@@ -29,7 +29,6 @@ def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_halo_ids,
     print(pad_print_middle("| ProgMassContribution:", "|", length=length))
     print(pad_print_middle("| ProgenitorID", "log10(M_cont/M_sun) |",
                            length=length))
-    print("|" + "-" * (length - 2) + "|")
     for i, prog in enumerate(prog_halo_ids):
         print(pad_print_middle(
             "| " + str(prog) + ":",
