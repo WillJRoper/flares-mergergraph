@@ -157,10 +157,14 @@ def plot_merger_ssfr():
             # Get this galaxy's data
             start = start_index[mega_ind][0]
             stride = nprogs[mega_ind][0]
+            mass = masses[mega_ind, :] * 10 ** 10
+
+            # Apply mass cut
+            if mass[4] < 10 ** 9:
+                continue
 
             if stride == 0:
                 nprog = 0
-                mass = masses[mega_ind] * 10 ** 10
             else:
                 prog_cont = prog_mass_conts[start: start + stride] * 10 ** 10
                 prog_ncont = prog_npart_conts[start: start + stride]
@@ -174,12 +178,10 @@ def plot_merger_ssfr():
                 # Get only "true" contributions
                 nprog = tot_prog_cont[okinds].size
 
-                print(ssfr)
-
-                # if ssfr < 10**-1:
-                #     print_info(g, sg, mega_ind, stride, nprog,
-                #                prog_cont[okinds, :], prog_ncont[okinds, :],
-                #                mass)
+                if ssfr < 10**-1:
+                    print_info(g, sg, mega_ind, stride, nprog,
+                               prog_cont[okinds, :], prog_ncont[okinds, :],
+                               mass)
 
             # Include this result
             tot_nprogs.append(nprog)
