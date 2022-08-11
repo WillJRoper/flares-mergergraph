@@ -115,6 +115,9 @@ def get_galaxy_info():
 
 def plot_merger_ssfr():
 
+    # Get command line args
+    pcent = float(sys.argv[1])
+
     # Define paths
     path = "/cosma/home/dp004/dc-rope1/cosma7/FLARES/flares-mergergraph/"
     halo_base = "data/halos/MEGAFLARES_halos_<reg>_<snap>.hdf5"
@@ -203,7 +206,7 @@ def plot_merger_ssfr():
                 # Limit galaxy's contribution to those contributing at least 10%
                 tot_prog_cont = np.sum(prog_cont, axis=1)
                 frac_prog_cont = tot_prog_cont / mass
-                okinds = frac_prog_cont > 0.1
+                okinds = frac_prog_cont > pcent
 
                 # Get only "true" contributions
                 nprog = tot_prog_cont[okinds].size
@@ -238,8 +241,8 @@ def plot_merger_ssfr():
                marker=".", color="k", alpha=0.6)
 
     # Add lines
-    ax.axvline(-0.1, linestyle="--", color="k", alpha=0.6)
-    ax.axvline(-0.2, linestyle="dotted", color="k", alpha=0.6)
+    ax.axvline(-1, linestyle="--", color="k", alpha=0.6)
+    ax.axvline(-2, linestyle="dotted", color="k", alpha=0.6)
 
     # Plot the scatter for passive galaxies split by central status
     okinds = tot_ssfrs < 10 ** -1
@@ -257,10 +260,11 @@ def plot_merger_ssfr():
     ax.legend()
 
     # Save figure
-    fig.savefig("passive_nprog.png", bbox_inches="tight", dpi=100)
+    fig.savefig("passive_nprog_%d_pcent.png" % pcent,
+                bbox_inches="tight", dpi=100)
 
 
-if len(sys.argv) > 1:
+if len(sys.argv) > 2:
     get_galaxy_info()
 else:
     plot_merger_ssfr()
