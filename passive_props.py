@@ -7,7 +7,7 @@ from mega.core.talking_utils import pad_print_middle
 
 
 def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_mass_cont,
-               prog_npart_cont):
+               prog_npart_cont, mass):
 
     pad = 15
     header = "=" * pad + \
@@ -18,6 +18,7 @@ def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_mass_cont,
     print(pad_print_middle("Nprog_major:", nprog_major, length=length))
     print(pad_print_middle("ProgMassContribution:", prog_mass_cont, length=length))
     print(pad_print_middle("ProgNPartContribution:", prog_npart_cont, length=length))
+    print(pad_print_middle("Halo Mass:", mass, length=length))
     print("=" * length)
 
 
@@ -153,16 +154,18 @@ def plot_merger_ssfr():
                                                mega_subgrps == sg))[0]
 
             # Get this galaxy's data
-            start = start_index[mega_ind][0]
-            stride = nprog[mega_ind][0]
+            start = start_index[mega_ind]
+            stride = nprog[mega_ind]
+
+            print(start, stride)
 
             if stride == 0:
                 nprog = 0
-                mass = masses[mega_ind]
+                mass = masses[mega_ind] * 10 ** 10
             else:
                 prog_cont = prog_mass_conts[start: start + stride]
                 prog_ncont = prog_npart_conts[start: start + stride]
-                mass = masses[mega_ind]
+                mass = masses[mega_ind] * 10 ** 10
 
                 # Limit galaxy's contribution to those contributing at least 10%
                 tot_prog_cont = np.sum(prog_cont, axis=1)
@@ -174,7 +177,8 @@ def plot_merger_ssfr():
 
                 if ssfr < 10**-1:
                     print_info(g, sg, mega_ind, stride, nprog,
-                               prog_cont[okinds, :], prog_ncont[okinds, :])
+                               prog_cont[okinds, :], prog_ncont[okinds, :],
+                               mass)
 
             # Include this result
             tot_nprogs.append(nprog)
