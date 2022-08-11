@@ -12,71 +12,40 @@ def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_halo_ids,
     # Convert units on mass
     prog_mass_cont = np.log10(prog_mass_cont)
 
-    pad = 90
-    print("=", end="\r")
+    pad = 60
     header = "{:=^60}".format("LINKING DATA FOR GALAXY: (%d, %d = %d) " % (
         grp, subgrp, mega_ind))
     length = len(header)
-    print(header, end="\r")
-    print("=")
-    print("=", end="\r")
-    print(pad_print_middle("Nprog_all:", true_nprog, length=length), end="\r")
-    print("=")
-    print("=", end="\r")
-    print("-" * length, end="\r")
-    print("=")
-    print("=", end="\r")
-    print(pad_print_middle("Nprog_major:", nprog_major, length=length), end="\r")
-    print("=")
-    print("=", end="\r")
-    print("-" * length, end="\r")
-    print("=")
-    print("=", end="\r")
-    print(pad_print_middle("log10(M_tot/M_sun):", "%.2f" % (np.log10(mass)),
-                           length=length), end="\r")
-    print("=")
-    print("=", end="\r")
-    print("-" * length, end="\r")
-    print("=")
-    print("=", end="\r")
-    print("ProgMassContribution:", end="\r")
-    print("=")
-    print("=", end="\r")
-    print(pad_print_middle("ProgenitorID", "log10(M_cont/M_sun)",
-                           length=length), end="\r")
-    print("=")
-    print("=", end="\r")
-    print("-" * length, end="\r")
-    print("=")
+    print(header)
+    print(pad_print_middle("| Nprog_all:", str(true_nprog) + " |", length=length))
+    print("|" + "-" * (length - 2) + "|")
+    print(pad_print_middle("| Nprog_major:", nprog_major, length=length))
+    print("|" + "-" * (length - 2) + "|")
+    print(pad_print_middle("| log10(M_tot/M_sun):", "%.2f" % (np.log10(mass)),
+                           length=length))
+    print("|" + "-" * (length - 2) + "|")
+    print("| ProgMassContribution:")
+    print(pad_print_middle("| ProgenitorID", "log10(M_cont/M_sun) |",
+                           length=length))
+    print("|" + "-" * (length - 2) + "|")
     for i, prog in enumerate(prog_halo_ids):
-        print("=", end="\r")
         print(pad_print_middle(
-            str(prog) + ":",
-            "[%.2f %.2f %.2f %.2f %.2f %.2f]" % (prog_mass_cont[i, 0],
-                                                 prog_mass_cont[i, 1],
-                                                 prog_mass_cont[i, 2],
-                                                 prog_mass_cont[i, 3],
-                                                 prog_mass_cont[i, 4],
-                                                 prog_mass_cont[i, 5]),
-            length=length), end="\r")
-        print("=")
-    print("=", end="\r")
-    print("-" * length, end="\r")
-    print("=")
-    print("=", end="\r")
-    print("ProgNPartContribution:", end="\r")
-    print("=")
-    print("=", end="\r")
-    print(pad_print_middle("ProgenitorID", "N_cont",
-                           length=length), end="\r")
-    print("=")
+            "| " + str(prog) + ":",
+            "[%.2f %.2f %.2f %.2f %.2f %.2f] |" % (prog_mass_cont[i, 0],
+                                                   prog_mass_cont[i, 1],
+                                                   prog_mass_cont[i, 2],
+                                                   prog_mass_cont[i, 3],
+                                                   prog_mass_cont[i, 4],
+                                                   prog_mass_cont[i, 5]),
+            length=length))
+    print("|" + "-" * (length - 2) + "|")
+    print("| ProgNPartContribution:")
+    print(pad_print_middle("| ProgenitorID", "N_cont |",
+                           length=length))
     for i, prog in enumerate(prog_halo_ids):
-        print("=", end="\r")
-        print(pad_print_middle(str(prog) + ":", prog_npart_cont[i, :],
-                               length=length), end="\r")
-        print("=")
-    print("=", end="\r")
-    print("=" * length)
+        print(pad_print_middle("| " + str(prog) + ":", prog_npart_cont[i, :],
+                               length=length - 2), "|")
+    print("|" + "-" * (length - 2) + "|")
 
 
 def get_galaxy_info():
