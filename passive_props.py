@@ -58,7 +58,7 @@ def get_galaxy_info():
     prog_mass_cont = snap_root["ProgMassContribution"][prog_start: prog_start +
                                                        prog_stride] * 10 ** 10
     prog_npart_cont = snap_root["ProgNPartContribution"][prog_start: prog_start +
-                                                         prog_stride] * 10 ** 10
+                                                         prog_stride]
     okinds = prog_mass_cont[:, cont_type] > 10 ** 8
     nprog_major = prog_mass_cont[okinds, :].shape[0]
     prog_mass_cont = prog_mass_cont[okinds, :]
