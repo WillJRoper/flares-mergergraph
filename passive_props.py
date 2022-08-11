@@ -9,7 +9,7 @@ from mega.core.talking_utils import pad_print_middle
 def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_halo_ids,
                prog_mass_cont, prog_npart_cont, mass):
 
-    pad = 50
+    pad = 70
     header = "=" * pad + \
         " LINKING DATA FOR GALAXY: (%d, %d = %d) " % (
             grp, subgrp, mega_ind) + "=" * pad
