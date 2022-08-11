@@ -9,7 +9,7 @@ from mega.core.talking_utils import pad_print_middle
 def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_halo_ids,
                prog_mass_cont, prog_npart_cont, mass):
 
-    pad = 30
+    pad = 50
     header = "=" * pad + \
         " LINKING DATA FOR GALAXY: (%d, %d = %d) " % (
             grp, subgrp, mega_ind) + "=" * pad
@@ -189,7 +189,7 @@ def plot_merger_ssfr():
                 nprog = tot_prog_cont[okinds].size
 
                 if ssfr < -1:
-                    print_info(g, sg, mega_ind, stride, nprog, progs,
+                    print_info(g, sg, mega_ind, stride, nprog, progs[okinds],
                                prog_cont[okinds, :], prog_ncont[okinds, :],
                                mass)
 
