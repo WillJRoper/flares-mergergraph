@@ -152,6 +152,8 @@ def plot_merger_ssfr():
             mega_ind = np.where(np.logical_and(mega_grps == g,
                                                mega_subgrps == sg))[0]
 
+            print(g, sg, ind, mega_ind)
+
             # Get this galaxy's data
             start = start_index[mega_ind]
             stride = nprog[mega_ind]
