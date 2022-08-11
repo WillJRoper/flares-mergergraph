@@ -18,6 +18,7 @@ def get_galaxy_info():
     subgrp = int(sys.argv[2])
     region = sys.argv[3]
     tag = sys.argv[4]
+    cont_type = int(sys.argv[5])
 
     # Replace place holders
     halo_base = halo_base.replace("<reg>", region)
@@ -58,7 +59,7 @@ def get_galaxy_info():
                                                        prog_stride] * 10 ** 10
     prog_npart_cont = snap_root["ProgNPartContribution"][prog_start: prog_start +
                                                          prog_stride] * 10 ** 10
-    okinds = prog_mass_cont[:, 0] > 10 ** 8
+    okinds = prog_mass_cont[:, cont_type] > 10 ** 8
     nprog_major = prog_mass_cont[okinds, :].shape[0]
     prog_mass_cont = prog_mass_cont[okinds, :]
     prog_npart_cont = prog_npart_cont[okinds, :]
