@@ -258,7 +258,7 @@ def plot_merger_ssfr():
     ax.legend()
 
     # Save figure
-    fig.savefig("passive_nprog_%d_pcent.png" % pcent * 10,
+    fig.savefig("passive_nprog_%d_pcent.png" % pcent * 100,
                 bbox_inches="tight", dpi=100)
 
 
