@@ -244,7 +244,7 @@ def plot_merger_ssfr():
     ax.axvline(-2, linestyle="dotted", color="k", alpha=0.6)
 
     # Plot the scatter for passive galaxies split by central status
-    okinds = tot_ssfrs < 10 ** -1
+    okinds = tot_ssfrs < -1
     cent = central[okinds]
     ax.scatter(tot_ssfrs[okinds][cent], tot_nprogs[okinds][cent],
                marker="o", color="r", label="Central")
