@@ -9,6 +9,9 @@ from mega.core.talking_utils import pad_print_middle
 def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_halo_ids,
                prog_mass_cont, prog_npart_cont, mass):
 
+    # Convert units on mass
+    prog_mass_cont = np.log10(prog_mass_cont)
+
     pad = 70
     header = "=" * pad + \
         " LINKING DATA FOR GALAXY: (%d, %d = %d) " % (
@@ -17,12 +20,20 @@ def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_halo_ids,
     print(header)
     print(pad_print_middle("Nprog_all:", true_nprog, length=length))
     print(pad_print_middle("Nprog_major:", nprog_major, length=length))
-    print(pad_print_middle("Halo Mass:", mass, length=length))
-    print("ProgMassContribution:")
+    print(pad_print_middle("log10(M_tot/M_sun):", "%.2f" % (np.log10(mass)),
+                           length=length))
+    print("ProgMassContribution (log10(M_cont/M_sun)):")
     for i, prog in enumerate(prog_halo_ids):
-        print(pad_print_middle(str(prog) + ":", prog_mass_cont[i, :],
-                               length=length))
-    print("ProgNPartContribution:")
+        print(pad_print_middle(
+            str(prog) + ":",
+            "[%.2f %.2f %.2f %.2f %.2f %.2f]" % (prog_mass_cont[i, 0],
+                                                 prog_mass_cont[i, 1],
+                                                 prog_mass_cont[i, 2],
+                                                 prog_mass_cont[i, 3],
+                                                 prog_mass_cont[i, 4],
+                                                 prog_mass_cont[i, 5]),
+            length=length))
+    print("ProgNPartContribution (N_cont):")
     for i, prog in enumerate(prog_halo_ids):
         print(pad_print_middle(str(prog) + ":", prog_npart_cont[i, :],
                                length=length))
