@@ -122,9 +122,9 @@ def plot_merger_ssfr():
 
         # Open MEGA file
         this_halo_base = halo_base.replace("<reg>", reg)
-        this_halo_base = halo_base.replace("<snap>", snap)
+        this_halo_base = this_halo_base.replace("<snap>", snap)
         this_graph_base = graph_base.replace("<reg>", reg)
-        this_graph_base = graph_base.replace("<snap>", snap)
+        this_graph_base = this_graph_base.replace("<snap>", snap)
         hdf_halo = h5py.File(this_halo_base, "r")
         hdf_graph = h5py.File(this_graph_base, "r")
 
