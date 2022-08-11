@@ -210,9 +210,9 @@ def plot_merger_ssfr():
                 nprog = tot_prog_cont[okinds].size
 
                 if ssfr < -1:
-                    print_info(reg, g, sg, mega_ind, stride, nprog, progs[okinds],
-                               prog_cont[okinds, :], prog_ncont[okinds, :],
-                               mass)
+                    print_info(reg, g, sg, mega_ind, stride, nprog,
+                               progs[okinds], prog_cont[okinds, :],
+                               prog_ncont[okinds, :], mass)
 
             # Include this result
             tot_nprogs.append(nprog)
@@ -258,7 +258,7 @@ def plot_merger_ssfr():
     ax.legend()
 
     # Save figure
-    fig.savefig("passive_nprog_%d_pcent.png" % pcent,
+    fig.savefig("passive_nprog_%d_pcent.png" % pcent * 10,
                 bbox_inches="tight", dpi=100)
 
 
