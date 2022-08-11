@@ -139,7 +139,7 @@ def plot_merger_ssfr():
         prog_mass_conts = hdf_graph["ProgMassContribution"][...]
         prog_npart_conts = hdf_graph["ProgNPartContribution"][...]
         start_index = hdf_graph["prog_start_index"][...]
-        nprog = hdf_graph["n_progs"][...]
+        nprogs = hdf_graph["n_progs"][...]
         hdf_graph.close()
 
         # Loop over MEGA galaxies getting the corresponding FLARES galaxy
@@ -155,7 +155,7 @@ def plot_merger_ssfr():
 
             # Get this galaxy's data
             start = start_index[mega_ind][0]
-            stride = nprog[mega_ind][0]
+            stride = nprogs[mega_ind][0]
 
             print(start, stride)
 
