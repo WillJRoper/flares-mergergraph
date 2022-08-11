@@ -13,17 +13,44 @@ def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_halo_ids,
     prog_mass_cont = np.log10(prog_mass_cont)
 
     pad = 30
+    print("=", end="\r")
     header = "=" * pad + \
         " LINKING DATA FOR GALAXY: (%d, %d = %d) " % (
             grp, subgrp, mega_ind) + "=" * pad
     length = len(header)
     print(header)
+    print("=")
+    print("=", end="\r")
     print(pad_print_middle("Nprog_all:", true_nprog, length=length))
+    print("=")
+    print("=", end="\r")
+    print("-" * length)
+    print("=")
+    print("=", end="\r")
     print(pad_print_middle("Nprog_major:", nprog_major, length=length))
+    print("=")
+    print("=", end="\r")
+    print("-" * length)
+    print("=")
+    print("=", end="\r")
     print(pad_print_middle("log10(M_tot/M_sun):", "%.2f" % (np.log10(mass)),
                            length=length))
-    print("ProgMassContribution (log10(M_cont/M_sun)):")
+    print("=")
+    print("=", end="\r")
+    print("-" * length)
+    print("=")
+    print("=", end="\r")
+    print("ProgMassContribution:")
+    print("=")
+    print("=", end="\r")
+    print(pad_print_middle("ProgenitorID", "log10(M_cont/M_sun)",
+                           length=length))
+    print("=")
+    print("=", end="\r")
+    print("-" * length)
+    print("=")
     for i, prog in enumerate(prog_halo_ids):
+        print("=", end="\r")
         print(pad_print_middle(
             str(prog) + ":",
             "[%.2f %.2f %.2f %.2f %.2f %.2f]" % (prog_mass_cont[i, 0],
@@ -33,10 +60,23 @@ def print_info(grp, subgrp, mega_ind, true_nprog, nprog_major, prog_halo_ids,
                                                  prog_mass_cont[i, 4],
                                                  prog_mass_cont[i, 5]),
             length=length))
-    print("ProgNPartContribution (N_cont):")
+        print("=")
+    print("=", end="\r")
+    print("-" * length)
+    print("=")
+    print("=", end="\r")
+    print("ProgNPartContribution:")
+    print("=")
+    print("=", end="\r")
+    print(pad_print_middle("ProgenitorID", "N_cont",
+                           length=length))
+    print("=")
     for i, prog in enumerate(prog_halo_ids):
+        print("=", end="\r")
         print(pad_print_middle(str(prog) + ":", prog_npart_cont[i, :],
                                length=length))
+        print("=")
+    print("=", end="\r")
     print("=" * length)
 
 
