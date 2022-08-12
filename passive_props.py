@@ -261,6 +261,13 @@ def plot_merger_ssfr():
     fig.savefig("passive_nprog_%d_pcent.png" % (pcent * 100),
                 bbox_inches="tight", dpi=100)
 
+    # Define and print out merger fractions
+    tot_frac = tot_nprogs[tot_nprogs > 1].size / tot_nprogs.size
+    pass_frac = tot_nprogs[okinds][tot_nprogs[okinds]
+                                   > 1].size / tot_nprogs[okinds].size
+    print("The passive merger fraction is %f compared to the total %f" %
+          (pass_frac, tot_frac))
+
 
 if len(sys.argv) > 2:
     get_galaxy_info()
