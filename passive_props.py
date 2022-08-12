@@ -170,7 +170,7 @@ def plot_merger_ssfr():
         prog_ids = hdf_graph["ProgHaloIDs"][...]
         start_index = hdf_graph["prog_start_index"][...]
         nprogs = hdf_graph["n_progs"][...]
-        split_masses = hdf_halo['halo_mass'][...]
+        split_masses = hdf_graph['halo_mass'][...]
         hdf_graph.close()
 
         print(split_masses)
