@@ -162,10 +162,7 @@ def plot_merger_ssfr():
         mega_grps = hdf_halo["group_number"][...]
         mega_subgrps = hdf_halo["subgroup_number"][...]
         masses = hdf_halo["masses"][...]
-        split_masses = hdf_halo['halo_mass'][...]
         hdf_halo.close()
-
-        print(split_masses)
 
         # Get contribution information
         prog_mass_conts = hdf_graph["ProgMassContribution"][...]
@@ -173,7 +170,10 @@ def plot_merger_ssfr():
         prog_ids = hdf_graph["ProgHaloIDs"][...]
         start_index = hdf_graph["prog_start_index"][...]
         nprogs = hdf_graph["n_progs"][...]
+        split_masses = hdf_halo['halo_mass'][...]
         hdf_graph.close()
+
+        print(split_masses)
 
         # Loop over MEGA galaxies getting the corresponding FLARES galaxy
         for ind in range(grps.size):
