@@ -190,8 +190,6 @@ def plot_merger_ssfr():
             stride = nprogs[mega_ind][0]
             mass = masses[mega_ind] * 10 ** 10
 
-            print(smass, split_masses[mega_ind, :])
-
             # Apply mass cut
             if smass < 10 ** 9:
                 continue
