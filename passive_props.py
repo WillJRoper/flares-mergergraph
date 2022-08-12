@@ -162,7 +162,7 @@ def plot_merger_ssfr():
         mega_grps = hdf_halo["group_number"][...]
         mega_subgrps = hdf_halo["subgroup_number"][...]
         masses = hdf_halo["masses"][...]
-        split_masses = hdf_halo["masses"][...]
+        split_masses = hdf_halo['halo_mass'][...]
         hdf_halo.close()
 
         print(split_masses)
