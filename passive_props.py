@@ -173,8 +173,6 @@ def plot_merger_ssfr():
         split_masses = hdf_graph['halo_mass'][...]
         hdf_graph.close()
 
-        print(split_masses)
-
         # Loop over MEGA galaxies getting the corresponding FLARES galaxy
         for ind in range(grps.size):
 
@@ -191,6 +189,8 @@ def plot_merger_ssfr():
             start = start_index[mega_ind][0]
             stride = nprogs[mega_ind][0]
             mass = masses[mega_ind] * 10 ** 10
+
+            print(smass, split_masses[mega_ind, :])
 
             # Apply mass cut
             if smass < 10 ** 9:
