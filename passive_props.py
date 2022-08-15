@@ -11,6 +11,7 @@ def print_info(reg, grp, subgrp, ind, mega_ind, true_nprog, nprog_major,
 
     # Convert units on mass
     prog_mass_cont = np.log10(prog_mass_cont)
+    prog_mass = np.log10(prog_mass)
 
     header = "{:=^90}".format(
         "LINKING DATA FOR GALAXY: (grp:%d, subgrp:%d = index: FLARES:%d MEGA: %d) in REGION %s " % (
