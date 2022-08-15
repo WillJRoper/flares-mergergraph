@@ -180,7 +180,7 @@ def plot_merger_ssfr():
 
         # Get contribution information
         prog_mass_conts = hdf_graph["ProgMassContribution"][...]
-        prog_masses = hdf_graph["ProgMass"][...]
+        prog_masses = hdf_graph["ProgMasses"][...]
         prog_npart_conts = hdf_graph["ProgNPartContribution"][...]
         prog_ids = hdf_graph["ProgHaloIDs"][...]
         start_index = hdf_graph["prog_start_index"][...]
