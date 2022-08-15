@@ -7,7 +7,7 @@ from mega.core.talking_utils import pad_print_middle
 
 
 def print_info(reg, grp, subgrp, ind, mega_ind, true_nprog, nprog_major,
-               prog_halo_ids, prog_mass_cont, prog_npart_cont, mass):
+               prog_halo_ids, prog_mass_cont, prog_npart_cont, mass, prog_mass):
 
     # Convert units on mass
     prog_mass_cont = np.log10(prog_mass_cont)
@@ -38,6 +38,20 @@ def print_info(reg, grp, subgrp, ind, mega_ind, true_nprog, nprog_major,
                                                    prog_mass_cont[i, 3],
                                                    prog_mass_cont[i, 4],
                                                    prog_mass_cont[i, 5]),
+            length=length))
+    print("|" + "-" * (length - 2) + "|")
+    print(pad_print_middle("| ProgMass:", "|", length=length))
+    print(pad_print_middle("| ProgenitorID", "log10(M_cont/M_sun) |",
+                           length=length))
+    for i, prog in enumerate(prog_halo_ids):
+        print(pad_print_middle(
+            "| " + str(prog) + ":",
+            "[%.2f %.2f %.2f %.2f %.2f %.2f] |" % (prog_mass[i, 0],
+                                                   prog_mass[i, 1],
+                                                   prog_mass[i, 2],
+                                                   prog_mass[i, 3],
+                                                   prog_mass[i, 4],
+                                                   prog_mass[i, 5]),
             length=length))
     print("|" + "-" * (length - 2) + "|")
     print(pad_print_middle("| ProgNPartContribution:", "|", length=length))
@@ -166,6 +180,7 @@ def plot_merger_ssfr():
 
         # Get contribution information
         prog_mass_conts = hdf_graph["ProgMassContribution"][...]
+        prog_masses = hdf_graph["ProgMass"][...]
         prog_npart_conts = hdf_graph["ProgNPartContribution"][...]
         prog_ids = hdf_graph["ProgHaloIDs"][...]
         start_index = hdf_graph["prog_start_index"][...]
@@ -201,6 +216,7 @@ def plot_merger_ssfr():
                 prog_ncont = prog_npart_conts[start: start + stride]
                 progs = prog_ids[start: start + stride]
                 mass = masses[mega_ind] * 10 ** 10
+                prog_mass = prog_masses[start: start + stride] * 10 ** 10
 
                 # Limit galaxy's contribution to those contributing at least 10%
                 tot_prog_cont = np.sum(prog_cont, axis=1)
@@ -213,7 +229,7 @@ def plot_merger_ssfr():
                 if ssfr < -1:
                     print_info(reg, g, sg, ind, mega_ind, stride, nprog,
                                progs[okinds], prog_cont[okinds, :],
-                               prog_ncont[okinds, :], mass)
+                               prog_ncont[okinds, :], mass, prog_mass)
 
             # Include this result
             tot_nprogs.append(nprog)
