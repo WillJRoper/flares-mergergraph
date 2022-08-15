@@ -6,15 +6,15 @@ import matplotlib.pyplot as plt
 from mega.core.talking_utils import pad_print_middle
 
 
-def print_info(reg, grp, subgrp, mega_ind, true_nprog, nprog_major,
+def print_info(reg, grp, subgrp, ind, mega_ind, true_nprog, nprog_major,
                prog_halo_ids, prog_mass_cont, prog_npart_cont, mass):
 
     # Convert units on mass
     prog_mass_cont = np.log10(prog_mass_cont)
 
     header = "{:=^90}".format(
-        "LINKING DATA FOR GALAXY: (%d, %d = %d) in REGION %s " % (
-            grp, subgrp, mega_ind, reg))
+        "LINKING DATA FOR GALAXY: (grp:%d, subgrp:%d = index: FLARES:%d MEGA: %d) in REGION %s " % (
+            grp, subgrp, ind, mega_ind, reg))
     length = len(header)
     print(header)
     print(pad_print_middle("| Nprog_all:", str(true_nprog) + " |", length=length))
@@ -211,7 +211,7 @@ def plot_merger_ssfr():
                 nprog = tot_prog_cont[okinds].size
 
                 if ssfr < -1:
-                    print_info(reg, g, sg, mega_ind, stride, nprog,
+                    print_info(reg, g, sg, ind, mega_ind, stride, nprog,
                                progs[okinds], prog_cont[okinds, :],
                                prog_ncont[okinds, :], mass)
 
