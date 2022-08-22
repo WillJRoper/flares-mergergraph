@@ -7,7 +7,8 @@ from mega.core.talking_utils import pad_print_middle
 
 
 def print_info(reg, grp, subgrp, ind, mega_ind, true_nprog, nprog_major,
-               prog_halo_ids, prog_mass_cont, prog_npart_cont, mass, prog_mass):
+               prog_halo_ids, prog_mass_cont, prog_npart_cont, mass, prog_mass,
+               prog_grps, prog_subgrps):
 
     # Convert units on mass
     prog_mass_cont = np.log10(prog_mass_cont)
@@ -32,7 +33,8 @@ def print_info(reg, grp, subgrp, ind, mega_ind, true_nprog, nprog_major,
                            length=length))
     for i, prog in enumerate(prog_halo_ids):
         print(pad_print_middle(
-            "| " + str(prog) + ":",
+            "| " + str(prog) + " (%d, %d):" % (prog_grps[prog],
+                                               prog_subgrps[prog]),
             "[%.2f %.2f %.2f %.2f %.2f %.2f] |" % (prog_mass_cont[i, 0],
                                                    prog_mass_cont[i, 1],
                                                    prog_mass_cont[i, 2],
@@ -46,7 +48,8 @@ def print_info(reg, grp, subgrp, ind, mega_ind, true_nprog, nprog_major,
                            length=length))
     for i, prog in enumerate(prog_halo_ids):
         print(pad_print_middle(
-            "| " + str(prog) + ":",
+            "| " + str(prog) + " (%d, %d):" % (prog_grps[prog],
+                                               prog_subgrps[prog]),
             "[%.2f %.2f %.2f %.2f %.2f %.2f] |" % (prog_mass[i, 0],
                                                    prog_mass[i, 1],
                                                    prog_mass[i, 2],
@@ -59,7 +62,10 @@ def print_info(reg, grp, subgrp, ind, mega_ind, true_nprog, nprog_major,
     print(pad_print_middle("| ProgenitorID", "N_cont |",
                            length=length))
     for i, prog in enumerate(prog_halo_ids):
-        print(pad_print_middle("| " + str(prog) + ":", prog_npart_cont[i, :],
+        print(pad_print_middle(
+            "| " + str(prog) + " (%d, %d):" % (prog_grps[prog],
+                                               prog_subgrps[prog]),
+                               prog_npart_cont[i, :],
                                length=length - 2), "|")
     print("=" * length)
 
@@ -148,6 +154,7 @@ def plot_merger_ssfr():
 
     # What snapshot are we doing?
     snap = "010_z005p000"
+    prog_snap = "009_z006p000"
 
     # Set up lists to collect our results
     tot_nprogs = []
@@ -170,14 +177,22 @@ def plot_merger_ssfr():
         this_halo_base = this_halo_base.replace("<snap>", snap)
         this_graph_base = graph_base.replace("<reg>", reg)
         this_graph_base = this_graph_base.replace("<snap>", snap)
+        this_prog_base = halo_base.replace("<reg>", reg)
+        this_prog_base = this_prog_base.replace("<snap>", prog_snap)
         hdf_halo = h5py.File(this_halo_base, "r")
         hdf_graph = h5py.File(this_graph_base, "r")
+        hdf_prog = h5py.File(this_prog_base, "r")
 
         # Get MEGA galaxy IDs and masses
         mega_grps = hdf_halo["group_number"][...]
         mega_subgrps = hdf_halo["subgroup_number"][...]
         masses = hdf_halo["masses"][...]
         hdf_halo.close()
+
+        # Get MEGA galaxy IDs for progenitors
+        prog_mega_grps = hdf_prog["group_number"][...]
+        prog_mega_subgrps = hdf_prog["subgroup_number"][...]
+        hdf_prog.close()
 
         # Get contribution information
         prog_mass_conts = hdf_graph["ProgMassContribution"][...]
@@ -230,7 +245,8 @@ def plot_merger_ssfr():
                 if ssfr < -1:
                     print_info(reg, g, sg, ind, mega_ind, stride, nprog,
                                progs[okinds], prog_cont[okinds, :],
-                               prog_ncont[okinds, :], mass, prog_mass)
+                               prog_ncont[okinds, :], mass, prog_mass,
+                               prog_mega_grps, prog_mega_subgrps)
 
             # Include this result
             tot_nprogs.append(nprog)
