@@ -422,6 +422,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                     masses_dict[key].extend(masses_dict.pop(galid))
                     part_types_dict[key].extend(part_types_dict.pop(galid))
 
+            print("Done", key)
+
         # Loop over halos and clean any spurious (npart<10)
         ini_keys = list(length_dict.keys())
         for key in ini_keys:
