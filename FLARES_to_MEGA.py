@@ -363,10 +363,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             if len(ngas[ind]) == 0:
                 continue
 
-            print(ind)
-
-            print(ngas[ind][0], ndm[ind][0], nstar[ind][0], nbh[ind][0])
-
             # Check we have the same length, if so nothing to do here.
             if length == (ngas[ind][0] + ndm[ind][0] + nstar[ind][0]
                           + nbh[ind][0]):
@@ -379,13 +375,15 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             print("Missing particles in", key, "(raw=", length, ", master=",
                   (ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind]), ")")
 
-            print(gbegin[ind], gbegin[ind] + ngas[ind])
-
             # Get the particle ids in the master file
-            this_gpart_ids = master_g_ids[gbegin[ind]: gbegin[ind] + ngas[ind]]
-            this_spart_ids = master_s_ids[sbegin[ind]                                          : sbegin[ind] + nstar[ind]]
-            this_dmpart_ids = master_dm_ids[dmbegin[ind]                                            : dmbegin[ind] + ndm[ind]]
-            this_bhpart_ids = master_bh_ids[bhbegin[ind]                                            : bhbegin[ind] + nbh[ind]]
+            this_gpart_ids = master_g_ids[gbegin[ind]
+                                          [0]: gbegin[ind][0] + ngas[ind][0]]
+            this_spart_ids = master_s_ids[sbegin[ind]
+                                          [0]: sbegin[ind[0]] + nstar[ind][0]]
+            this_dmpart_ids = master_dm_ids[dmbegin[ind]
+                                            [0]: dmbegin[ind][0] + ndm[ind][0]]
+            this_bhpart_ids = master_bh_ids[bhbegin[ind]
+                                            [0]: bhbegin[ind][0] + nbh[ind][0]]
 
             # Search for the missing particles
             for galid in length_dict:
