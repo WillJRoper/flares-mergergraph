@@ -228,7 +228,11 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         bhbegin[1:] = np.cumsum(nbh[:-1])
 
         # Combine spurious galaxies
-        for key, length in length_dict.items():
+        keys = list(length_dict.keys())
+        for key in keys:
+
+            # Get length
+            length = length_dict[key]
 
             # Get the master file index
             ind = np.where(np.logical_and(
@@ -246,9 +250,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             # How many particles are we missing?
             nmissing = (ngas[ind][0] + ndm[ind][0] + nstar[ind][0]
                         + nbh[ind][0] - length)
-
-            print(nmissing, "missing particles in", key, "(raw=", length, ", master=",
-                  (ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind]), ")")
 
             # Get the particle ids in the master file
             this_gpart_ids = master_g_ids[gbegin[ind]
@@ -313,8 +314,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
                 # If we have a match combine them
                 if incommon:
-                    print("Found contributor:", galid, "with",
-                          length_dict[galid], "particles")
                     length_dict[key] += length_dict.pop(galid)
                     pid_dict[key].append(pid_dict.pop(galid))
                     ind_dict[key].append(ind_dict.pop(galid))
@@ -486,7 +485,11 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         bhbegin[1:] = np.cumsum(nbh[:-1])
 
         # Combine spurious galaxies
-        for key, length in length_dict.items():
+        keys = list(length_dict.keys())
+        for key in keys:
+
+            # Get length
+            length = length_dict[key]
 
             # Get the master file index
             ind = np.where(np.logical_and(
