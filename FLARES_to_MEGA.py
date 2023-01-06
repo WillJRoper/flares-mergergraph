@@ -231,6 +231,10 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         keys = list(length_dict.keys())
         for key in keys:
 
+            # Skip already recombined galaxies
+            if key not in length_dict:
+                continue
+
             # Get length
             length = length_dict[key]
 
@@ -315,16 +319,16 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 # If we have a match combine them
                 if incommon:
                     length_dict[key] += length_dict.pop(galid)
-                    pid_dict[key].append(pid_dict.pop(galid))
-                    ind_dict[key].append(ind_dict.pop(galid))
-                    posx_dict[key].append(posx_dict.pop(galid))
-                    posy_dict[key].append(posy_dict.pop(galid))
-                    posz_dict[key].append(posz_dict.pop(galid))
-                    velx_dict[key].append(velx_dict.pop(galid))
-                    vely_dict[key].append(vely_dict.pop(galid))
-                    velz_dict[key].append(velz_dict.pop(galid))
-                    masses_dict[key].append(masses_dict.pop(galid))
-                    part_types_dict[key].append(part_types_dict.pop(galid))
+                    pid_dict[key].extend(pid_dict.pop(galid))
+                    ind_dict[key].extend(ind_dict.pop(galid))
+                    posx_dict[key].extend(posx_dict.pop(galid))
+                    posy_dict[key].extend(posy_dict.pop(galid))
+                    posz_dict[key].extend(posz_dict.pop(galid))
+                    velx_dict[key].extend(velx_dict.pop(galid))
+                    vely_dict[key].extend(vely_dict.pop(galid))
+                    velz_dict[key].extend(velz_dict.pop(galid))
+                    masses_dict[key].extend(masses_dict.pop(galid))
+                    part_types_dict[key].extend(part_types_dict.pop(galid))
 
     if rank == 0:
         # Set up lists for master
@@ -488,6 +492,10 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         keys = list(length_dict.keys())
         for key in keys:
 
+            # Skip already recombined galaxies
+            if key not in length_dict:
+                continue
+
             # Get length
             length = length_dict[key]
 
@@ -577,16 +585,16 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                     print("Found contributor:", galid, "with",
                           length_dict[galid], "particles")
                     length_dict[key] += length_dict.pop(galid)
-                    pid_dict[key].append(pid_dict.pop(galid))
-                    ind_dict[key].append(ind_dict.pop(galid))
-                    posx_dict[key].append(posx_dict.pop(galid))
-                    posy_dict[key].append(posy_dict.pop(galid))
-                    posz_dict[key].append(posz_dict.pop(galid))
-                    velx_dict[key].append(velx_dict.pop(galid))
-                    vely_dict[key].append(vely_dict.pop(galid))
-                    velz_dict[key].append(velz_dict.pop(galid))
-                    masses_dict[key].append(masses_dict.pop(galid))
-                    part_types_dict[key].append(part_types_dict.pop(galid))
+                    pid_dict[key].extend(pid_dict.pop(galid))
+                    ind_dict[key].extend(ind_dict.pop(galid))
+                    posx_dict[key].extend(posx_dict.pop(galid))
+                    posy_dict[key].extend(posy_dict.pop(galid))
+                    posz_dict[key].extend(posz_dict.pop(galid))
+                    velx_dict[key].extend(velx_dict.pop(galid))
+                    vely_dict[key].extend(vely_dict.pop(galid))
+                    velz_dict[key].extend(velz_dict.pop(galid))
+                    masses_dict[key].extend(masses_dict.pop(galid))
+                    part_types_dict[key].extend(part_types_dict.pop(galid))
 
         # Loop over halos and clean any spurious (npart<10)
         ini_keys = list(length_dict.keys())
