@@ -386,7 +386,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                                             [0]: bhbegin[ind][0] + nbh[ind][0]]
 
             # Search for the missing particles
-            for galid in length_dict:
+            galaxy_ids = list(length_dict.keys())
+            for galid in galaxy_ids:
 
                 # Skip self
                 if galid == key:
