@@ -359,7 +359,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             ind = np.logical_and(grps == key[0], subgrps == key[1])[0]
 
             # Skip galaxies not in the master file
-            if ind.size == 0:
+            if len(ngas[ind]) == 0:
                 continue
 
             # Check we have the same length, if so nothing to do here.
