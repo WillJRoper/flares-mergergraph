@@ -334,9 +334,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         ndm = gal_grp["DM_Length"][...]
         nbh = gal_grp["BH_Length"][...]
         master_g_ids = part_grp["G_ID"][...]
-        master_s_ids = part_grp["S_ID"][...]
-        master_dm_ids = part_grp["DM_ID"][...]
-        master_bh_ids = part_grp["BH_ID"][...]
         grps = gal_grp["GroupNumber"][...]
         subgrps = gal_grp["SubGroupNumber"][...]
 
@@ -386,12 +383,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             # Get the particle ids in the master file
             this_gpart_ids = master_g_ids[gbegin[ind]
                                           [0]: gbegin[ind][0] + ngas[ind][0]]
-            this_spart_ids = master_s_ids[sbegin[ind]
-                                          [0]: sbegin[ind[0]] + nstar[ind][0]]
-            this_dmpart_ids = master_dm_ids[dmbegin[ind]
-                                            [0]: dmbegin[ind][0] + ndm[ind][0]]
-            this_bhpart_ids = master_bh_ids[bhbegin[ind]
-                                            [0]: bhbegin[ind][0] + nbh[ind][0]]
 
             # Search for the missing particles
             galaxy_ids = list(length_dict.keys())
@@ -412,36 +403,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                     # If a particle is shared exit
                     if part in pid_dict[galid]:
                         incommon = True
-                        break
-
-                for part in this_spart_ids:
-
-                    # Exit if we already found a match
-                    if incommon:
-                        break
-
-                    if part in pid_dict[galid]:
-                        incommon = True
-                        break
-
-                for part in this_dmpart_ids:
-
-                    # Exit if we already found a match
-                    if incommon:
-                        break
-
-                    if part in pid_dict[galid]:
-                        incommon = True
-                        break
-
-                for part in this_bhpart_ids:
-
-                    # Exit if we already found a match
-                    if incommon:
-                        break
-
-                    if part in pid_dict[galid]:
-                        incommon = True
+                        print("Mathcing particle", part)
                         break
 
                 # If we have a match combine them
