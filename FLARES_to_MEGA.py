@@ -372,7 +372,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             nmissing = (ngas[ind][0] + ndm[ind][0] + nstar[ind][0]
                         + nbh[ind][0] - length)
 
-            print("Missing particles in", key, "(raw=", length, ", master=",
+            print(nmissing, "missing particles in", key, "(raw=", length, ", master=",
                   (ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind]), ")")
 
             # Get the particle ids in the master file
@@ -438,6 +438,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
                 # If we have a match combine them
                 if incommon:
+                    print("Found contributor:", galid, "with",
+                          length_dict[galid], "particles")
                     length_dict[key] += length_dict.pop(galid)
                     pid_dict[key].append(pid_dict.pop(galid))
                     ind_dict[key].append(ind_dict.pop(galid))
