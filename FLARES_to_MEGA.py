@@ -362,6 +362,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             if len(ngas[ind]) == 0:
                 continue
 
+            print(ngas[ind][0], ndm[ind][0], nstar[ind][0], nbh[ind][0])
+
             # Check we have the same length, if so nothing to do here.
             if length == (ngas[ind][0] + ndm[ind][0] + nstar[ind][0]
                           + nbh[ind][0]):
