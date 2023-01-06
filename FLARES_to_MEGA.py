@@ -370,7 +370,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             nmissing = ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind] - length
 
             print("Missing particles in", key, "(raw=", length, ", master=",
-                  (length, ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind]) ")")
+                  (length, ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind]), ")")
 
             # Get the particle ids in the master file
             this_gpart_ids = master_g_ids[gbegin[ind]: gbegin[ind] + ngas[ind]]
