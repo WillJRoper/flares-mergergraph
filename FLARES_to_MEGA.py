@@ -356,7 +356,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         for key, length in length_dict.items():
 
             # Get the master file index
-            ind = np.logical_and(grps == key[0], subgrps == key[1])
+            ind = np.logical_and(grps == key[0], subgrps == key[1])[0]
 
             # Skip galaxies not in the master file
             if ind.size == 0:
