@@ -340,6 +340,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         grps = gal_grp["GroupNumber"][...]
         subgrps = gal_grp["SubGroupNumber"][...]
 
+        hdf.close()
+
         # Set up beginning pointers
         gbegin = np.zeros(len(ngas), dtype=int)
         sbegin = np.zeros(len(nstar), dtype=int)
