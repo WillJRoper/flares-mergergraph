@@ -319,6 +319,130 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 part_types_dict.setdefault(key,
                                            []).extend(all_part_types[r][key])
 
+        # Define path for the master file
+        master_base = \
+            "/cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/data/flares.hdf5"
+
+        # Open the master file
+        hdf = h5py.File(master_base, "r")
+
+        # Get master data
+        gal_grp = hdf[reg][tag]["Galaxy"]
+        part_grp = hdf[reg][tag]["Particle"]
+        nstar = gal_grp["S_Length"][...]
+        ngas = gal_grp["G_Length"][...]
+        ndm = gal_grp["DM_Length"][...]
+        nbh = gal_grp["BH_Length"][...]
+        master_g_ids = part_grp["G_ID"][...]
+        master_s_ids = part_grp["S_ID"][...]
+        master_dm_ids = part_grp["DM_ID"][...]
+        master_bh_ids = part_grp["BH_ID"][...]
+        grps = gal_grp["GroupNumber"][...]
+        subgrps = gal_grp["SubGroupNumber"][...]
+
+        # Set up beginning pointers
+        gbegin = np.zeros(len(ngas), dtype=int)
+        sbegin = np.zeros(len(nstar), dtype=int)
+        dmbegin = np.zeros(len(ndm), dtype=int)
+        bhbegin = np.zeros(len(nbh), dtype=int)
+        gbegin[1:] = np.cumsum(ngas[:-1])
+        sbegin[1:] = np.cumsum(nstar[:-1])
+        dmbegin[1:] = np.cumsum(ndm[:-1])
+        bhbegin[1:] = np.cumsum(nbh[:-1])
+
+        # Combine spurious galaxies
+        for key, length in length_dict.items():
+
+            # Get the master file index
+            ind = np.logical_and(grps == key[0], subgrps == key[1])
+
+            # Skip galaxies not in the master file
+            if ind.size == 0:
+                continue
+
+            # Check we have the same length, if so nothing to do here.
+            if length == ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind]:
+                continue
+
+            # How many particles are we missing?
+            nmissing = ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind] - length
+
+            print("Missing particles in", key, "(raw=%d, master=%d)" %
+                  (length, ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind]))
+
+            # Get the particle ids in the master file
+            this_gpart_ids = master_g_ids[gbegin[ind]: gbegin[ind] + ngas[ind]]
+            this_spart_ids = master_s_ids[sbegin[ind]
+                : sbegin[ind] + nstar[ind]]
+            this_dmpart_ids = master_dm_ids[dmbegin[ind]
+                : dmbegin[ind] + ndm[ind]]
+            this_bhpart_ids = master_bh_ids[bhbegin[ind]
+                : bhbegin[ind] + nbh[ind]]
+
+            # Search for the missing particles
+            for galid in length_dict:
+
+                # Skip self
+                if galid == key:
+                    continue
+
+                # Skip if there are too many particles
+                if length[galid] > nmissing:
+                    continue
+
+                # Does the group have particles in common with the master file?
+                incommon = False
+                for part in this_gpart_ids:
+
+                    # If a particle is shared exit
+                    if part in pid_dict[galid]:
+                        incommon = True
+                        break
+
+                for part in this_spart_ids:
+
+                    # Exit if we already found a match
+                    if incommon:
+                        break
+
+                    if part in pid_dict[galid]:
+                        incommon = True
+                        break
+
+                for part in this_dmpart_ids:
+
+                    # Exit if we already found a match
+                    if incommon:
+                        break
+
+                    if part in pid_dict[galid]:
+                        incommon = True
+                        break
+
+                for part in this_bhpart_ids:
+
+                    # Exit if we already found a match
+                    if incommon:
+                        break
+
+                    if part in pid_dict[galid]:
+                        incommon = True
+                        break
+
+                # If we have a match combine them
+                if incommon:
+                    length_dict[key] += length_dict.pop(galid)
+                    pid_dict[key].append(pid_dict.pop(galid))
+                    ind_dict[key].append(ind_dict.pop(galid))
+                    posx_dict[key].append(posx_dict.pop(galid))
+                    posy_dict[key].append(posy_dict.pop(galid))
+                    posz_dict[key].append(posz_dict.pop(galid))
+                    velx_dict[key].append(velx_dict.pop(galid))
+                    vely_dict[key].append(vely_dict.pop(galid))
+                    velz_dict[key].append(velz_dict.pop(galid))
+                    masses_dict[key].append(masses_dict.pop(galid))
+                    part_types_dict[key].append(part_types_dict.pop(galid))
+
         # Loop over halos and clean any spurious (npart<10)
         ini_keys = list(length_dict.keys())
         for key in ini_keys:
