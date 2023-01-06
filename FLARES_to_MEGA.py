@@ -363,14 +363,16 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 continue
 
             # Check we have the same length, if so nothing to do here.
-            if length == ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind]:
+            if length == (ngas[ind][0] + ndm[ind][0] + nstar[ind][0]
+                          + nbh[ind][0]):
                 continue
 
             # How many particles are we missing?
-            nmissing = ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind] - length
+            nmissing = (ngas[ind][0] + ndm[ind][0] + nstar[ind][0]
+                        + nbh[ind][0] - length)
 
             print("Missing particles in", key, "(raw=", length, ", master=",
-                  (length, ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind]), ")")
+                  (ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind]), ")")
 
             print(gbegin[ind], gbegin[ind] + ngas[ind])
 
