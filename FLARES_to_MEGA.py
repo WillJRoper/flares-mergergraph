@@ -356,7 +356,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         for key, length in length_dict.items():
 
             # Get the master file index
-            ind = np.logical_and(grps == key[0], subgrps == key[1])[0]
+            ind = np.where(np.logical_and(
+                grps == key[0], subgrps == key[1]))[0]
 
             # Skip galaxies not in the master file
             if len(ngas[ind]) == 0:
@@ -382,12 +383,9 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
             # Get the particle ids in the master file
             this_gpart_ids = master_g_ids[gbegin[ind]: gbegin[ind] + ngas[ind]]
-            this_spart_ids = master_s_ids[sbegin[ind]
-                : sbegin[ind] + nstar[ind]]
-            this_dmpart_ids = master_dm_ids[dmbegin[ind]
-                : dmbegin[ind] + ndm[ind]]
-            this_bhpart_ids = master_bh_ids[bhbegin[ind]
-                : bhbegin[ind] + nbh[ind]]
+            this_spart_ids = master_s_ids[sbegin[ind]                                          : sbegin[ind] + nstar[ind]]
+            this_dmpart_ids = master_dm_ids[dmbegin[ind]                                            : dmbegin[ind] + ndm[ind]]
+            this_bhpart_ids = master_bh_ids[bhbegin[ind]                                            : bhbegin[ind] + nbh[ind]]
 
             # Search for the missing particles
             for galid in length_dict:
