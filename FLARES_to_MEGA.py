@@ -393,7 +393,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                     continue
 
                 # Skip if there are too many particles
-                if length[galid] > nmissing:
+                if length_dict[galid] > nmissing:
                     continue
 
                 # Does the group have particles in common with the master file?
