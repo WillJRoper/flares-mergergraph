@@ -402,25 +402,9 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                     continue
 
                 # Does the group have particles in common with the master file?
-                incommon = False
-                for part in this_dmpart_ids:
-
-                    # If a particle is shared exit
-                    if part in pid_dict[galid]:
-                        incommon = True
-                        break
-
-                # If we haven't found a match continue
-                if not incommon:
-                    continue
-
-                # Check that all the particles in this galaxy appear
-                for part in this_dmpart_ids:
-
-                    # If we found a particle not included they are not a match
-                    if part not in pid_dict[galid]:
-                        incommon = False
-                        break
+                # We only have to test a single particle because they all must
+                # appear.
+                incommon = pid_dict[galid][0] in this_dmpart_ids
 
                 # If we have a match combine them
                 if incommon:
