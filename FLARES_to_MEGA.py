@@ -416,11 +416,17 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 this_g_parts = pid_dict[galid][part_types_dict[galid] == 0]
                 this_dm_parts = pid_dict[galid][part_types_dict[galid] == 1]
                 this_s_parts = pid_dict[galid][part_types_dict[galid] == 4]
-                if len(this_dm_parts) > 0:
+                if isinstance(this_dm_parts, np.uint64):
+                    incommon = this_dm_parts in this_dmpart_ids
+                elif len(this_dm_parts) > 0:
                     incommon = this_dm_parts[0] in this_dmpart_ids
-                if not incommon and len(this_g_parts) > 0:
+                if not incommon and isinstance(this_g_parts, np.uint64):
                     incommon = this_g_parts[0] in this_gpart_ids
-                if not incommon and len(this_s_parts) > 0:
+                elif not incommon and len(this_g_parts) > 0:
+                    incommon = this_g_parts[0] in this_gpart_ids
+                if not incommon and isinstance(this_s_parts, np.uint64):
+                    incommon = this_s_parts[0] in this_spart_ids
+                elif not incommon and len(this_s_parts) > 0:
                     incommon = this_s_parts[0] in this_spart_ids
 
                 # If we have a match combine them
