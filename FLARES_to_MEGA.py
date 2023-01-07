@@ -415,14 +415,10 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                     continue
 
                 # Does the group have particles in common with the master file?
-                incommon = False
-                igal = 0
-                while not incommon and igal < len(pid_dict[galid]):
-                    incommon = (pid_dict[galid][igal] in this_dmpart_ids or
-                                pid_dict[galid][igal] in this_gpart_ids or
-                                pid_dict[galid][igal] in this_spart_ids or
-                                pid_dict[galid][igal] in this_bhpart_ids)
-                    igal += 1
+                incommon = (pid_dict[galid][part_types_dict[galid] == 1][0] in this_dmpart_ids or
+                            pid_dict[galid][part_types_dict[galid] == 0][0] in this_gpart_ids or
+                            pid_dict[galid][part_types_dict[galid] == 4][0] in this_spart_ids or
+                            pid_dict[galid][part_types_dict[galid] == 5][0] in this_bhpart_ids)
 
                 # If we have a match combine them
                 if incommon:
