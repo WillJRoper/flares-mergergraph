@@ -333,9 +333,9 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         ngas = gal_grp["G_Length"][...]
         ndm = gal_grp["DM_Length"][...]
         nbh = gal_grp["BH_Length"][...]
-        master_g_ids = part_grp["G_ID"][...]
-        grps = gal_grp["GroupNumber"][...]
-        subgrps = gal_grp["SubGroupNumber"][...]
+        master_dm_ids = part_grp["DM_ID"][...]
+        master_grps = gal_grp["GroupNumber"][...]
+        master_subgrps = gal_grp["SubGroupNumber"][...]
 
         hdf.close()
 
@@ -360,9 +360,14 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             # Get length
             length = length_dict[key]
 
+            # Skip galaxies too small to appear in master
+            if length < 200:
+                continue
+
             # Get the master file index
-            ind = np.where(np.logical_and(
-                grps == key[0], subgrps == key[1]))[0]
+            ind = np.where(
+                np.logical_and(master_grps == key[0], master_subgrps == key[1])
+            )[0]
 
             # Skip galaxies not in the master file
             if len(ngas[ind]) == 0:
@@ -381,8 +386,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                   (ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind]), ")")
 
             # Get the particle ids in the master file
-            this_gpart_ids = master_g_ids[gbegin[ind]
-                                          [0]: gbegin[ind][0] + ngas[ind][0]]
+            this_dmpart_ids = master_dm_ids[dmbegin[ind][0]:
+                                            dmbegin[ind][0] + ndm[ind][0]]
 
             # Search for the missing particles
             galaxy_ids = list(length_dict.keys())
@@ -398,12 +403,23 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
                 # Does the group have particles in common with the master file?
                 incommon = False
-                for part in this_gpart_ids:
+                for part in this_dmpart_ids:
 
                     # If a particle is shared exit
                     if part in pid_dict[galid]:
                         incommon = True
-                        print("Mathcing particle", part)
+                        break
+
+                # If we haven't found a match continue
+                if not incommon:
+                    continue
+
+                # Check that all the particles in this galaxy appear
+                for part in this_dmpart_ids:
+
+                    # If we found a particle not included they are not a match
+                    if part not in pid_dict[galid]:
+                        incommon = False
                         break
 
                 # If we have a match combine them
