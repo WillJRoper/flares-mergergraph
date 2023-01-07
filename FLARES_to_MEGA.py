@@ -333,7 +333,10 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         ngas = gal_grp["G_Length"][...]
         ndm = gal_grp["DM_Length"][...]
         nbh = gal_grp["BH_Length"][...]
+        master_s_ids = part_grp["S_ID"][...]
+        master_g_ids = part_grp["G_ID"][...]
         master_dm_ids = part_grp["DM_ID"][...]
+        master_bh_ids = part_grp["BH_ID"][...]
         master_grps = gal_grp["GroupNumber"][...]
         master_subgrps = gal_grp["SubGroupNumber"][...]
 
@@ -386,8 +389,14 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                   (ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind]), ")")
 
             # Get the particle ids in the master file
+            this_gpart_ids = master_g_ids[gbegin[ind][0]:
+                                          gbegin[ind][0] + ngas[ind][0]]
             this_dmpart_ids = master_dm_ids[dmbegin[ind][0]:
                                             dmbegin[ind][0] + ndm[ind][0]]
+            this_spart_ids = master_s_ids[sbegin[ind][0]:
+                                          sbegin[ind][0] + nstar[ind][0]]
+            this_bhpart_ids = master_bh_ids[bhbegin[ind][0]:
+                                            bhbegin[ind][0] + nbh[ind][0]]
 
             # Search for the missing particles
             galaxy_ids = list(length_dict.keys())
@@ -402,9 +411,13 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                     continue
 
                 # Does the group have particles in common with the master file?
-                # We only have to test a single particle because they all must
-                # appear.
-                incommon = pid_dict[galid][0] in this_dmpart_ids
+                # We only have to test a single particle of each type because
+                # all particles must appear but not all particles are
+                # guaranteed to exist in the spurious systems.
+                incommon = (pid_dict[galid][0] in this_dmpart_ids or
+                            pid_dict[galid][0] in this_gpart_ids or
+                            pid_dict[galid][0] in this_spart_ids or
+                            pid_dict[galid][0] in this_bhpart_ids)
 
                 # If we have a match combine them
                 if incommon:
