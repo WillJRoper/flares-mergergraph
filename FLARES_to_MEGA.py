@@ -336,7 +336,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         master_s_ids = part_grp["S_ID"][...]
         master_g_ids = part_grp["G_ID"][...]
         master_dm_ids = part_grp["DM_ID"][...]
-        master_bh_ids = part_grp["BH_ID"][...]
         master_grps = gal_grp["GroupNumber"][...]
         master_subgrps = gal_grp["SubGroupNumber"][...]
 
@@ -395,8 +394,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                                             dmbegin[ind][0] + ndm[ind][0]]
             this_spart_ids = master_s_ids[sbegin[ind][0]:
                                           sbegin[ind][0] + nstar[ind][0]]
-            this_bhpart_ids = master_bh_ids[bhbegin[ind][0]:
-                                            bhbegin[ind][0] + nbh[ind][0]]
 
             # Search for the missing particles
             galaxy_ids = list(length_dict.keys())
@@ -415,10 +412,16 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                     continue
 
                 # Does the group have particles in common with the master file?
-                incommon = (pid_dict[galid][part_types_dict[galid] == 1][0] in this_dmpart_ids or
-                            pid_dict[galid][part_types_dict[galid] == 0][0] in this_gpart_ids or
-                            pid_dict[galid][part_types_dict[galid] == 4][0] in this_spart_ids or
-                            pid_dict[galid][part_types_dict[galid] == 5][0] in this_bhpart_ids)
+                incommon = False
+                this_g_parts = pid_dict[galid][part_types_dict[galid] == 0]
+                this_dm_parts = pid_dict[galid][part_types_dict[galid] == 1]
+                this_s_parts = pid_dict[galid][part_types_dict[galid] == 4]
+                if len(this_dm_parts) > 0:
+                    incommon = this_dm_parts[0] in this_dmpart_ids
+                if not incommon and len(this_g_parts) > 0:
+                    incommon = this_g_parts[0] in this_gpart_ids
+                if not incommon and len(this_s_parts) > 0:
+                    incommon = this_s_parts[0] in this_spart_ids
 
                 # If we have a match combine them
                 if incommon:
