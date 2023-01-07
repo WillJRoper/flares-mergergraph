@@ -406,18 +406,23 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 if galid == key:
                     continue
 
+                # Skip galaxies in different groups
+                if galid[0] != key[0]:
+                    continue
+
                 # Skip if there are too many particles
                 if length_dict[galid] > nmissing:
                     continue
 
                 # Does the group have particles in common with the master file?
-                # We only have to test a single particle of each type because
-                # all particles must appear but not all particles are
-                # guaranteed to exist in the spurious systems.
-                incommon = (pid_dict[galid][0] in this_dmpart_ids or
-                            pid_dict[galid][0] in this_gpart_ids or
-                            pid_dict[galid][0] in this_spart_ids or
-                            pid_dict[galid][0] in this_bhpart_ids)
+                incommon = False
+                igal = 0
+                while not incommon and igal < len(pid_dict[galid]):
+                    incommon = (pid_dict[galid][igal] in this_dmpart_ids or
+                                pid_dict[galid][igal] in this_gpart_ids or
+                                pid_dict[galid][igal] in this_spart_ids or
+                                pid_dict[galid][igal] in this_bhpart_ids)
+                    igal += 1
 
                 # If we have a match combine them
                 if incommon:
