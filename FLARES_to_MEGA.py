@@ -421,11 +421,11 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 elif len(this_dm_parts) > 0:
                     incommon = this_dm_parts[0] in this_dmpart_ids
                 if not incommon and isinstance(this_g_parts, np.uint64):
-                    incommon = this_g_parts[0] in this_gpart_ids
+                    incommon = this_g_parts in this_gpart_ids
                 elif not incommon and len(this_g_parts) > 0:
                     incommon = this_g_parts[0] in this_gpart_ids
                 if not incommon and isinstance(this_s_parts, np.uint64):
-                    incommon = this_s_parts[0] in this_spart_ids
+                    incommon = this_s_parts in this_spart_ids
                 elif not incommon and len(this_s_parts) > 0:
                     incommon = this_s_parts[0] in this_spart_ids
 
