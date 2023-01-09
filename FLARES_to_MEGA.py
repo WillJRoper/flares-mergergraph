@@ -160,6 +160,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 part_vel = np.array([])
                 part_mass = np.array([])
 
+        print("Particle ID type", type(part_ids))
+
         # Skip particle types that are not present
         if part_ids.size == 0:
             continue
@@ -338,6 +340,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         master_dm_ids = part_grp["DM_ID"][...]
         master_grps = gal_grp["GroupNumber"][...]
         master_subgrps = gal_grp["SubGroupNumber"][...]
+
+        print("Particle ID type", type(master_g_ids))
 
         hdf.close()
 
