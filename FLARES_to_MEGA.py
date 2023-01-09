@@ -247,7 +247,7 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 loop_arr = this_gpart_inds
             elif part_type == 4:
                 loop_arr = this_spart_inds
-            elif part_type = 5:
+            elif part_type == 5:
                 loop_arr = this_bhpart_inds
 
             # Loop over particles setting halo keys
