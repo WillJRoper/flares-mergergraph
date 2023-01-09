@@ -165,7 +165,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         key = (part_grp_ids[ind], part_subgrp_ids[ind])
 
         # Get the equivalent master file key
-        key = master_spurious[key]
+        if key in master_spurious:
+            key = master_spurious[key]
 
         # Add this particle to the halo
         length_dict.setdefault(key, 0)
@@ -234,21 +235,16 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             # Define this halo's key
             mkey = (master_grps[ind], master_subgrps[ind])
 
-            # Get the particle inds in the master file for this galaxy
-            this_gpart_inds = master_g_inds[gbegin[ind]:
-                                            gbegin[ind] + ngas[ind]]
-            this_spart_inds = master_s_inds[sbegin[ind]:
-                                            sbegin[ind] + nstar[ind]]
-            this_bhpart_inds = master_bh_inds[bhbegin[ind]:
-                                              bhbegin[ind] + nbh[ind]]
-
             # What particle type are we using?
             if part_type == 0:
-                loop_arr = this_gpart_inds
+                loop_arr = master_g_inds[gbegin[ind]:
+                                         gbegin[ind] + ngas[ind]]
             elif part_type == 4:
-                loop_arr = this_spart_inds
+                loop_arr = master_s_inds[sbegin[ind]:
+                                         sbegin[ind] + nstar[ind]]
             elif part_type == 5:
-                loop_arr = this_bhpart_inds
+                loop_arr = master_bh_inds[bhbegin[ind]:
+                                          bhbegin[ind] + nbh[ind]]
 
             # Loop over particles setting halo keys
             for part in loop_arr:
@@ -278,7 +274,8 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             key = (part_grp_ids[ind], part_subgrp_ids[ind])
 
             # Get the equivalent master file key
-            key = master_spurious[key]
+            if key in master_spurious:
+                key = master_spurious[key]
 
             # Add this particle to the halo
             length_dict.setdefault(key, 0)
