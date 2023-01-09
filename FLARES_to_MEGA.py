@@ -723,15 +723,6 @@ def main():
          tictoc, reg, snap, meta, inputs["data"]
     )
 
-    # Initialise array to store all particle IDs
-    snap_part_ids = np.zeros(np.sum(meta.npart), dtype=int)
-
-    # Read particle IDs to store combined particle ids array
-    for part_type in meta.part_types:
-        offset = meta.part_ind_offset[part_type]
-        snap_part_ids[offset: offset + meta.npart[part_type]
-                      ] = pre_snap_part_ids[part_type]
-
     if rank == 0:
         message(rank, "Nhalo: %d" % nhalos)
         message(rank, "Npart_dm: %d" % meta.npart[1])
@@ -853,7 +844,6 @@ def main():
         # Write out file
         write_data(tictoc, meta, newPhaseID, newPhaseSubID,
                    results_dict=results, sub_results_dict={},
-                   sim_pids=snap_part_ids,
                    extra_data=extra_data)
 
         if meta.verbose:
