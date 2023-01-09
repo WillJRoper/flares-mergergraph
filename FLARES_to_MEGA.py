@@ -57,6 +57,39 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     # Define the NULL value in SUBFIND files
     null = 1073741824
 
+    # Define path for the master file
+    master_base = \
+        "/cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/data/flares.hdf5"
+
+    # Open the master file
+    hdf = h5py.File(master_base, "r")
+
+    # Get master data
+    gal_grp = hdf[reg][tag]["Galaxy"]
+    part_grp = hdf[reg][tag]["Particle"]
+    nstar = gal_grp["S_Length"][...]
+    ngas = gal_grp["G_Length"][...]
+    ndm = gal_grp["DM_Length"][...]
+    nbh = gal_grp["BH_Length"][...]
+    master_s_inds = part_grp["S_Index"][...]
+    master_g_inds = part_grp["G_Index"][...]
+    master_dm_inds = part_grp["DM_Index"][...]
+    master_bh_inds = part_grp["BH_Index"][...]
+    master_grps = gal_grp["GroupNumber"][...]
+    master_subgrps = gal_grp["SubGroupNumber"][...]
+
+    hdf.close()
+
+    # Set up beginning pointers
+    gbegin = np.zeros(len(ngas), dtype=int)
+    sbegin = np.zeros(len(nstar), dtype=int)
+    dmbegin = np.zeros(len(ndm), dtype=int)
+    bhbegin = np.zeros(len(nbh), dtype=int)
+    gbegin[1:] = np.cumsum(ngas[:-1])
+    sbegin[1:] = np.cumsum(nstar[:-1])
+    dmbegin[1:] = np.cumsum(ndm[:-1])
+    bhbegin[1:] = np.cumsum(nbh[:-1])
+
     # Set up dictionary for particle ids to be stitched later
     true_part_ids = {}
 
@@ -80,6 +113,30 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
     # Get the number of particles we are dealing with
     npart = part_ids.size
+
+    # Create a dictionary holding subgroups contained in a master subgroup
+    master_spurious = {}
+    for (ind, grp), subgrp in zip(enumerate(master_grps), master_subgrps):
+
+        # Define this halo's key
+        mkey = (master_grps[ind], master_subgrps[ind])
+
+        # Get the particle inds in the master file for this galaxy
+        this_dmpart_inds = master_dm_inds[dmbegin[ind]:
+                                          dmbegin[ind] + ndm[ind]]
+
+        # Loop over particles setting halo keys
+        for part in this_dmpart_inds:
+
+            # Get raw data keys
+            rkey = (part_grp_ids[part], part_subgrp_ids[part])
+
+            # Ensure galaxies aren't assigned to multiple master parents
+            if rkey in master_spurious and mkey != master_spurious[rkey]:
+                print("WARNING: subgroup assigned to multiple master file subgroups!")
+
+            # Set keys
+            master_spurious[rkey] = mkey
 
     # Let's bin the particles and split the work up
     rank_bins = np.linspace(0, npart, size + 1, dtype=int)
@@ -106,6 +163,9 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
         # Define this halo's key
         key = (part_grp_ids[ind], part_subgrp_ids[ind])
+
+        # Get the equivalent master file key
+        key = master_spurious[key]
 
         # Add this particle to the halo
         length_dict.setdefault(key, 0)
@@ -160,14 +220,49 @@ def get_data(tictoc, reg, tag, meta, inputpath):
                 part_vel = np.array([])
                 part_mass = np.array([])
 
-        print("Particle ID type", type(part_ids[0]))
-
         # Skip particle types that are not present
         if part_ids.size == 0:
             continue
 
         # Get the number of particles we are dealing with
         npart = part_ids.size
+
+        # Create a dictionary holding subgroups contained in a master subgroup
+        master_spurious = {}
+        for (ind, grp), subgrp in zip(enumerate(master_grps), master_subgrps):
+
+            # Define this halo's key
+            mkey = (master_grps[ind], master_subgrps[ind])
+
+            # Get the particle inds in the master file for this galaxy
+            this_gpart_inds = master_g_inds[gbegin[ind]:
+                                            gbegin[ind] + ngas[ind]]
+            this_spart_inds = master_s_inds[sbegin[ind]:
+                                            sbegin[ind] + nstar[ind]]
+            this_bhpart_inds = master_bh_inds[bhbegin[ind]:
+                                              bhbegin[ind] + nbh[ind]]
+
+            # What particle type are we using?
+            if part_type == 0:
+                loop_arr = this_gpart_inds
+            elif part_type == 4:
+                loop_arr = this_spart_inds
+            elif part_type = 5:
+                loop_arr = this_bhpart_inds
+
+            # Loop over particles setting halo keys
+            for part in loop_arr:
+
+                # Get raw data keys
+                rkey = (part_grp_ids[part], part_subgrp_ids[part])
+
+                # Ensure galaxies aren't assigned to multiple master parents
+                if rkey in master_spurious and mkey != master_spurious[rkey]:
+                    print(
+                        "WARNING: subgroup assigned to multiple master file subgroups!")
+
+                # Set keys
+                master_spurious[rkey] = mkey
 
         # Let's bin the particles and split the work up
         rank_bins = np.linspace(0, npart, size + 1, dtype=int)
@@ -181,6 +276,9 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
             # Define this halo's key
             key = (part_grp_ids[ind], part_subgrp_ids[ind])
+
+            # Get the equivalent master file key
+            key = master_spurious[key]
 
             # Add this particle to the halo
             length_dict.setdefault(key, 0)
@@ -320,136 +418,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
             for key in all_part_types[r]:
                 part_types_dict.setdefault(key,
                                            []).extend(all_part_types[r][key])
-
-        # Define path for the master file
-        master_base = \
-            "/cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/data/flares.hdf5"
-
-        # Open the master file
-        hdf = h5py.File(master_base, "r")
-
-        # Get master data
-        gal_grp = hdf[reg][tag]["Galaxy"]
-        part_grp = hdf[reg][tag]["Particle"]
-        nstar = gal_grp["S_Length"][...]
-        ngas = gal_grp["G_Length"][...]
-        ndm = gal_grp["DM_Length"][...]
-        nbh = gal_grp["BH_Length"][...]
-        master_s_ids = part_grp["S_ID"][...]
-        master_g_ids = part_grp["G_ID"][...]
-        master_dm_ids = part_grp["DM_ID"][...]
-        master_grps = gal_grp["GroupNumber"][...]
-        master_subgrps = gal_grp["SubGroupNumber"][...]
-
-        print("Particle ID type", type(master_g_ids[0]))
-
-        hdf.close()
-
-        # Set up beginning pointers
-        gbegin = np.zeros(len(ngas), dtype=int)
-        sbegin = np.zeros(len(nstar), dtype=int)
-        dmbegin = np.zeros(len(ndm), dtype=int)
-        bhbegin = np.zeros(len(nbh), dtype=int)
-        gbegin[1:] = np.cumsum(ngas[:-1])
-        sbegin[1:] = np.cumsum(nstar[:-1])
-        dmbegin[1:] = np.cumsum(ndm[:-1])
-        bhbegin[1:] = np.cumsum(nbh[:-1])
-
-        # Combine spurious galaxies
-        keys = list(length_dict.keys())
-        for key in keys:
-
-            # Skip already recombined galaxies
-            if key not in length_dict:
-                continue
-
-            # Get length
-            length = length_dict[key]
-
-            # Skip galaxies too small to appear in master
-            if length < 200:
-                continue
-
-            # Get the master file index
-            ind = np.where(
-                np.logical_and(master_grps == key[0], master_subgrps == key[1])
-            )[0]
-
-            # Skip galaxies not in the master file
-            if len(ngas[ind]) == 0:
-                continue
-
-            # Check we have the same length, if so nothing to do here.
-            if length == (ngas[ind][0] + ndm[ind][0] + nstar[ind][0]
-                          + nbh[ind][0]):
-                continue
-
-            # How many particles are we missing?
-            nmissing = (ngas[ind][0] + ndm[ind][0] + nstar[ind][0]
-                        + nbh[ind][0] - length)
-
-            print(nmissing, "missing particles in", key, "(raw=", length, ", master=",
-                  (ngas[ind] + ndm[ind] + nstar[ind] + nbh[ind]), ")")
-
-            # Get the particle ids in the master file
-            this_gpart_ids = master_g_ids[gbegin[ind][0]:
-                                          gbegin[ind][0] + ngas[ind][0]]
-            this_dmpart_ids = master_dm_ids[dmbegin[ind][0]:
-                                            dmbegin[ind][0] + ndm[ind][0]]
-            this_spart_ids = master_s_ids[sbegin[ind][0]:
-                                          sbegin[ind][0] + nstar[ind][0]]
-
-            # Search for the missing particles
-            galaxy_ids = list(length_dict.keys())
-            for galid in galaxy_ids:
-
-                # Skip self
-                if galid == key:
-                    continue
-
-                # Skip galaxies in different groups
-                if galid[0] != key[0]:
-                    continue
-
-                # Skip if there are too many particles
-                if length_dict[galid] > nmissing:
-                    continue
-
-                # Does the group have particles in common with the master file?
-                incommon = False
-                this_g_parts = pid_dict[galid][part_types_dict[galid] == 0]
-                this_dm_parts = pid_dict[galid][part_types_dict[galid] == 1]
-                this_s_parts = pid_dict[galid][part_types_dict[galid] == 4]
-                if isinstance(this_dm_parts, np.uint64):
-                    incommon = this_dm_parts in this_dmpart_ids
-                elif len(this_dm_parts) > 0:
-                    incommon = this_dm_parts[0] in this_dmpart_ids
-                if not incommon and isinstance(this_g_parts, np.uint64):
-                    incommon = this_g_parts in this_gpart_ids
-                elif not incommon and len(this_g_parts) > 0:
-                    incommon = this_g_parts[0] in this_gpart_ids
-                if not incommon and isinstance(this_s_parts, np.uint64):
-                    incommon = this_s_parts in this_spart_ids
-                elif not incommon and len(this_s_parts) > 0:
-                    incommon = this_s_parts[0] in this_spart_ids
-
-                # If we have a match combine them
-                if incommon:
-                    print("Found contributor:", galid, "with",
-                          length_dict[galid], "particles")
-                    length_dict[key] += length_dict.pop(galid)
-                    pid_dict[key].extend(pid_dict.pop(galid))
-                    ind_dict[key].extend(ind_dict.pop(galid))
-                    posx_dict[key].extend(posx_dict.pop(galid))
-                    posy_dict[key].extend(posy_dict.pop(galid))
-                    posz_dict[key].extend(posz_dict.pop(galid))
-                    velx_dict[key].extend(velx_dict.pop(galid))
-                    vely_dict[key].extend(vely_dict.pop(galid))
-                    velz_dict[key].extend(velz_dict.pop(galid))
-                    masses_dict[key].extend(masses_dict.pop(galid))
-                    part_types_dict[key].extend(part_types_dict.pop(galid))
-
-            print("Done", key)
 
         # Loop over halos and clean any spurious (npart<10)
         ini_keys = list(length_dict.keys())
