@@ -49,10 +49,6 @@ def get_data(tictoc, reg, tag, meta, inputpath):
     single_file = sim_path.replace("<snap>", tag)
     sim_path = "/".join([s for s in single_file.split("/") if "snap" not in s])
 
-    # Handle stupid directory!
-    if reg == "06":
-        sim_path += "/snapshots/"
-
     # Open single file and get DM particle mass
     hdf = h5py.File(single_file, "r")
     part_mass = hdf["Header"].attrs["MassTable"][1] / meta.h
@@ -99,8 +95,14 @@ def get_data(tictoc, reg, tag, meta, inputpath):
 
     # Read in all the relevant data
     with HiddenPrints():
-        true_part_ids[1] = E.read_array("SNAP", sim_path, tag,
-                                        "PartType1/ParticleIDs", numThreads=8)
+
+        # Handle stupid directory
+        if reg == "06":
+            true_part_ids[1] = E.read_array("SNAP", sim_path + "/snapshots/", tag,
+                                            "PartType1/ParticleIDs", numThreads=8)
+        else:
+            true_part_ids[1] = E.read_array("SNAP", sim_path, tag,
+                                            "PartType1/ParticleIDs", numThreads=8)
         part_ids = E.read_array("PARTDATA", sim_path, tag,
                                 "PartType1/ParticleIDs", numThreads=8)
         part_grp_ids = E.read_array("PARTDATA", sim_path, tag,
@@ -191,9 +193,13 @@ def get_data(tictoc, reg, tag, meta, inputpath):
         # Read in all the relevant data
         with HiddenPrints():
             try:
-                true_part_ids[part_type] = E.read_array("SNAP", sim_path, tag,
-                                                        "PartType%d/ParticleIDs" % part_type,
-                                                        numThreads=8)
+                if reg == "06":
+                    true_part_ids[part_type] = E.read_array("SNAP", sim_path + "/snapshots/", tag,
+                                                            "PartType%d/ParticleIDs" % part_type, numThreads=8)
+                else:
+                    true_part_ids[part_type] = E.read_array("SNAP", sim_path, tag,
+                                                            "PartType%d/ParticleIDs" % part_type,
+                                                            numThreads=8)
             except (ValueError, KeyError):
                 true_part_ids[part_type] = np.array([])
             try:
