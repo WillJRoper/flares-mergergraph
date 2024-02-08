@@ -32,7 +32,7 @@ def copy_hdf5_without_group(
         with h5py.File(new_file_path, "w") as new_file:
             # Function to check if the current object is the group to exclude
             def exclude_group(name, node):
-                if group_to_exclude in name:
+                if group_to_exclude not in name:
                     print(f"Copying {name}")
                     original_file.copy(node.name, new_file, name)
 
