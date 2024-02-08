@@ -34,14 +34,10 @@ def exclude_and_copy_group(src_group, dest_group, exclude_group_names):
         # Skip the excluded group and its contents
         skip = False
         for exclude_group_name in exclude_group_names:
-            if exclude_group_name in path.split("/"):
+            print(exclude_group_name, path)
+            if exclude_group_name in path:
                 skip = True
                 break
-            for key in path.split("/"):
-                print(exclude_group_name, key)
-                if exclude_group_name in key:
-                    skip = True
-                    break
         if skip:
             continue
 
