@@ -38,6 +38,7 @@ def exclude_and_copy_group(src_group, dest_group, exclude_group_names):
                 skip = True
                 break
             for key in path.split("/"):
+                print(exclude_group_name, key)
                 if exclude_group_name in key:
                     skip = True
                     break
