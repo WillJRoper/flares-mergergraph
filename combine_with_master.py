@@ -147,8 +147,6 @@ with h5py.File(new_file, "r+") as hdf_master:
                     if (grp, subgrp) not in mergergraph_lookup:
                         continue
 
-                    print("Processing", grp, subgrp)
-
                     # Get the mergergraph pointer and length
                     prog_start_index, nprog = mergergraph_lookup[(grp, subgrp)]
 
