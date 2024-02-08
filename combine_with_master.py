@@ -46,7 +46,7 @@ def exclude_and_copy_group(src_group, dest_group, exclude_group_names):
         # If it's a group, create it in the destination and recurse
         if isinstance(item, h5py.Group):
             dest_sub_group = dest_group.require_group(item_name)
-            exclude_and_copy_group(item, dest_sub_group, exclude_group_name)
+            exclude_and_copy_group(item, dest_sub_group, exclude_group_names)
         # If it's a dataset, copy it directly
         elif isinstance(item, h5py.Dataset):
             src_group.copy(item_name, dest_group)
