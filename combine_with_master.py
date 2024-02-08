@@ -23,7 +23,7 @@ def extract_group_subgroup_ids(float_id):
     return grpID, subgrpID
 
 
-def exclude_and_copy_group(src_group, dest_group, exclude_group_name):
+def exclude_and_copy_group(src_group, dest_group, exclude_group_names):
     """
     Recursively copies contents from src_group to dest_group, excluding the specified group.
     """
@@ -32,7 +32,12 @@ def exclude_and_copy_group(src_group, dest_group, exclude_group_name):
         path = f"{src_group.name}/{item_name}".lstrip("/")
 
         # Skip the excluded group and its contents
-        if exclude_group_name in path.split("/"):
+        skip = False
+        for exclude_group_name in exclude_group_names:
+            if exclude_group_name in path.split("/"):
+                skip = True
+                break
+        if skip:
             continue
 
         print(f"Copying {path}")
@@ -66,7 +71,7 @@ new_file = "flares_with_mergers.hdf5"
 mega_path = "/cosma7/data/dp004/FLARES/FLARES-1/MergerGraphs/"
 
 # Make a new copy
-copy_hdf5_excluding_group(master_file, new_file, "Particle")
+copy_hdf5_excluding_group(master_file, new_file, ["Particle", "BPASS_2.2.1"])
 
 # Define the regions
 regs = []
