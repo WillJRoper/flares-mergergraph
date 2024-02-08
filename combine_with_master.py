@@ -23,22 +23,35 @@ def extract_group_subgroup_ids(float_id):
     return grpID, subgrpID
 
 
-def copy_hdf5_without_group(
-    original_file_path, new_file_path, group_to_exclude
-):
-    # Open the original HDF5 file in read mode
-    with h5py.File(original_file_path, "r") as original_file:
-        # Create a new HDF5 file to hold the copied and modified dataset
-        with h5py.File(new_file_path, "w") as new_file:
-            # Function to check if the current object is the group to exclude
-            def exclude_group(name, node):
-                if group_to_exclude not in name:
-                    print(f"Copying {name}")
-                    original_file.copy(node.name, new_file, name)
+def exclude_and_copy_group(src_group, dest_group, exclude_group_name):
+    """
+    Recursively copies contents from src_group to dest_group, excluding the specified group.
+    """
+    for item_name, item in src_group.items():
+        # Construct the path for the current item
+        path = f"{src_group.name}/{item_name}".lstrip("/")
 
-            # Visit each object in the original file to copy it unless it's
-            # the excluded group
-            original_file.visititems(exclude_group)
+        # Skip the excluded group and its contents
+        if exclude_group_name in path.split("/"):
+            continue
+
+        # If it's a group, create it in the destination and recurse
+        if isinstance(item, h5py.Group):
+            dest_sub_group = dest_group.require_group(item_name)
+            exclude_and_copy_group(item, dest_sub_group, exclude_group_name)
+        # If it's a dataset, copy it directly
+        elif isinstance(item, h5py.Dataset):
+            src_group.copy(item_name, dest_group)
+
+
+def copy_hdf5_excluding_group(
+    original_file_path, new_file_path, exclude_group_name
+):
+    with h5py.File(original_file_path, "r") as original_file, h5py.File(
+        new_file_path, "w"
+    ) as new_file:
+        # Start the recursive copying from the root, excluding the specified group
+        exclude_and_copy_group(original_file, new_file, exclude_group_name)
 
 
 # Define the input files
@@ -51,7 +64,7 @@ new_file = "flares_with_mergers.hdf5"
 mega_path = "/cosma7/data/dp004/FLARES/FLARES-1/MergerGraphs/"
 
 # Make a new copy
-copy_hdf5_without_group(master_file, new_file, "Particle")
+copy_hdf5_excluding_group(master_file, new_file, "Particle")
 
 # Define the regions
 regs = []
