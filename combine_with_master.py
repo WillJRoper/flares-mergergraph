@@ -35,6 +35,8 @@ def exclude_and_copy_group(src_group, dest_group, exclude_group_name):
         if exclude_group_name in path.split("/"):
             continue
 
+        print(f"Copying {path}")
+
         # If it's a group, create it in the destination and recurse
         if isinstance(item, h5py.Group):
             dest_sub_group = dest_group.require_group(item_name)
