@@ -34,9 +34,10 @@ def exclude_and_copy_group(src_group, dest_group, exclude_group_names):
         # Skip the excluded group and its contents
         skip = False
         for exclude_group_name in exclude_group_names:
-            if exclude_group_name in path.split("/"):
-                skip = True
-                break
+            for key in path.split("/"):
+                if exclude_group_name in key:
+                    skip = True
+                    break
         if skip:
             continue
 
@@ -52,13 +53,13 @@ def exclude_and_copy_group(src_group, dest_group, exclude_group_names):
 
 
 def copy_hdf5_excluding_group(
-    original_file_path, new_file_path, exclude_group_name
+    original_file_path, new_file_path, exclude_group_names
 ):
     with h5py.File(original_file_path, "r") as original_file, h5py.File(
         new_file_path, "w"
     ) as new_file:
         # Start the recursive copying from the root, excluding the specified group
-        exclude_and_copy_group(original_file, new_file, exclude_group_name)
+        exclude_and_copy_group(original_file, new_file, exclude_group_names)
 
 
 # Define the input files
@@ -71,7 +72,7 @@ new_file = "flares_with_mergers.hdf5"
 mega_path = "/cosma7/data/dp004/FLARES/FLARES-1/MergerGraphs/"
 
 # Make a new copy
-copy_hdf5_excluding_group(master_file, new_file, ["Particle", "BPASS_2.2.1"])
+copy_hdf5_excluding_group(master_file, new_file, ["Particle", "BPASS"])
 
 # Define the regions
 regs = []
