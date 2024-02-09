@@ -71,7 +71,15 @@ new_file = "flares_with_mergers.hdf5"
 mega_path = "/cosma7/data/dp004/FLARES/FLARES-1/MergerGraphs/"
 
 # Make a new copy
-copy_hdf5_excluding_group(master_file, new_file, ["Particle", "BPASS"])
+copy_hdf5_excluding_group(
+    master_file,
+    new_file,
+    [
+        "Particle",
+        "BPASS",
+        "011_z004p770",
+    ],
+)
 
 # Define the regions
 regs = []
