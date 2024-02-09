@@ -145,6 +145,8 @@ with h5py.File(new_file, "r+") as hdf_master:
                 ):
                     # Skip galaxies without an entry
                     if (grp, subgrp) not in mergergraph_lookup:
+                        nprogs[ind] = 0
+                        pointers[ind] = -1
                         continue
 
                     # Get the mergergraph pointer and length
