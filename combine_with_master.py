@@ -166,7 +166,7 @@ with h5py.File(new_file, "r+") as hdf_master:
                     ]
 
                     # Perform a stellar mass cut
-                    prog_masses = prog_masses[prog_masses > 1e8]
+                    prog_masses = prog_masses[prog_masses > 1e8 / 10**10]
 
                     # Sort by stellar mass (they're sorted by DM mass in the
                     # MEGA file)
@@ -186,3 +186,29 @@ with h5py.File(new_file, "r+") as hdf_master:
                 gal_grp["MergerGraph"].create_dataset(
                     "prog_stellar_masses", data=np.array(prog_star_ms)
                 )
+
+
+def get_prog_data(ind, pointers, nprogs, prog_data):
+    """
+    Get the progenitor data for a galaxy.
+
+    Args:
+        ind (int):
+            The index of the galaxy.
+        pointers (np.ndarray):
+            The pointers to first element of the progenitor data for each galaxy.
+        nprogs (np.ndarray):
+            The number of progenitors for each galaxy.
+        prog_data (np.ndarray):
+            The progenitor data to access.
+
+    Returns:
+        np.ndarray:
+            The progenitor data for the galaxy.
+    """
+    # Get the start index and number of progenitors
+    start_index = pointers[ind]
+    nprog = nprogs[ind]
+
+    # Get the progenitor data
+    return prog_data[start_index : start_index + nprog]
